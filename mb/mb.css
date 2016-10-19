@@ -16,6 +16,14 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 */
+html {
+	background-color: #373a3c;
+}
+html,body {
+    -webkit-overflow-scrolling : touch !important;
+    overflow: auto !important;
+    height: 100% !important;
+}
 .btn-no-outline,
 .btn-no-outline:hover,
 .btn-no-outline:active,
