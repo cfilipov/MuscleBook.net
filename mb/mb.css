@@ -26,6 +26,9 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 	text-decoration: none;
 	padding: 0;
 }
+.no-bottom-border {
+	border-bottom: none !important;
+}
 input:focus {
 	outline: none;
 }
@@ -199,6 +202,9 @@ path.muscle.highlight {
 .no-bottom-pad {
 	margin: 0;
 }
+.input-group .form-control {
+	z-index: initial;
+}
 .btn-group.full-bleed .btn {
 	margin: 0;
 	border-radius: 0;
@@ -221,6 +227,9 @@ path.muscle.highlight {
     display: table-cell;
     width: 1%; 
 }
+.btn-xs {
+	padding: 0 .5rem;
+}
 .btn-group-xs>.btn, .btn-xs {
 	padding: 0 .5rem;
 }
@@ -229,21 +238,25 @@ path.muscle.highlight {
 	left: 5px;
 	top: 5px;
 	text-align: left;
-	opacity: 0.5;
+	opacity: 0.8;
 }
 .top-right {
 	position: absolute;
 	right: 5px;
 	top: 5px;
 	text-align: right;
-	opacity: 0.5;
+	opacity: 0.8;
 }
 .bottom-right {
 	position: absolute;
 	right: 5px;
 	bottom: 5px;
 	text-align: right;
-	opacity: 0.5;
+	opacity: 0.8;
+}
+/* Remove dropdown menu caret */
+.dropdown-toggle::after {
+	display:none;
 }
 .btn-group-justified .btn .btn,
 .btn-group-justified .btn-group .btn {
@@ -252,6 +265,9 @@ path.muscle.highlight {
 .btn-group-justified .btn .dropdown-menu,
 .btn-group-justified .btn-group .dropdown-menu {
 	left: auto; 
+}
+.pad-bottom {
+	margin-bottom: .75rem;
 }
 /* Override dc.css "float: left" which causes computed width to be 1 */
 div.dc-chart {

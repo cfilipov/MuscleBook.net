@@ -1309,8 +1309,11 @@ window.onresize = function(event) {
 };
 
 function metricChanged(event) {
-	if (!event.target.checked) return;
-	let metric = event.target.value;
+	//if (!event.target.checked) return;
+	// let metric = event.target.value;
+	// hack to work around bootstrap not updating radio checked status
+	// this function is called on click of the label instead because onchange wont happen
+	let metric = event.target.firstElementChild.value;
 	updateMetric(metric);
 	dc.redrawAll()
 }

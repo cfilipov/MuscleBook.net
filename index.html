@@ -22,11 +22,16 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="user-scalable=no, width=device-width">
+    <meta name="format-detection" content="telephone=no">
+	<meta name="author" content="Cristian Filipov">
     <link rel="stylesheet" type="text/css" href="lib/bootstrap-4.0.0-alpha.4.min.css">
     <link rel="stylesheet" type="text/css" href="lib/dc.css">
     <link rel="stylesheet" type="text/css" href="mb/mb.css">
 	<link rel="apple-touch-icon" href="Icon512.png" />
 	<link rel="icon" type="image/png" href="Icon512.png" />
+	<title>Muscle Book</title>
 </head>
 <body>
 <!-- 
@@ -40,12 +45,29 @@ Navigation
         </button>
 		<div class="dropdown-menu" aria-labelledby="dropdownMenu2">
 			<h5 class="dropdown-header">Muscle Book</h5>
-			<button type="button" class="dropdown-item" data-toggle="modal" data-backdrop="static" data-target="#select-exercise-modal">Log New Set</button>
+			<button type="button" class="dropdown-item" data-toggle="modal" data-backdrop="static" data-target="#select-exercise-modal">Add Set</button>
 			<button type="button" class="dropdown-item" data-backdrop="static" data-toggle="modal" data-target="#import-data-modal">Import</button>
 			<button type="button" class="dropdown-item" data-backdrop="static" onclick="exportJSON();" download>Export</button>
 			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#about-modal">About</button>
 			<div class="dropdown-divider"></div>
 			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#debug-options-modal">Debug</button>
+		</div>
+		<div class="pull-xs-right">
+			<div class="col-xs-6 col-sm-4">
+				<span class="hidden-sm-up">xs</span>
+			</div>
+			<div class="col-xs-6 col-sm-4">
+				<span class="hidden-xs-down hidden-md-up">sm</span>
+			</div>
+			<div class="col-xs-6 col-sm-4">
+				<span class="hidden-sm-down hidden-lg-up">md</span>
+			</div>
+			<div class="col-xs-6 col-sm-4">
+				<span class="hidden-md-down hidden-xl-up visible">lg</span>
+			</div>
+			<div class="col-xs-6 col-sm-4">
+				<span class="hidden-lg-down visible">xl</span>
+			</div>
 		</div>
 	</div>
 </nav>
@@ -57,19 +79,12 @@ Main content
 <!-- 
 Calendar graph
 -->
-<div class="col-sm-12 col-md-10 col-lg-8">
+<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
 	<div class="col-sm-12">
 		<div class="card">
 			<span id="cal-tip" class="tag tag-info tip" hidden="true"></span>
 			<div id="cal-graph"></div>
 		</div>
-	</div>
-</div>
-<!-- 
-Timeline bar chart
--->
-<div class="col-sm-12 col-md-10 col-lg-8">
-	<div class="col-sm-12">
 		<div class="card">
 			<div id="time-chart"></div>
 			<div class="btn-group btn-group-xs top-left" role="group" aria-label="Second group">
@@ -89,7 +104,7 @@ All other charts (below cal graph)
 Large: Two columns
 Small: One column
 -->
-<div class="col-sm-12 col-md-10 col-lg-8">
+<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
 <!-- 
 Right column
 -->
@@ -102,6 +117,50 @@ Anatomy diagram
 		<div id="anatomy-diagram-left" class="col-xs-6"></div>
 		<div id="anatomy-diagram-right" class="col-xs-6"></div>
 		<span id="anatomy-tip" class="tag tag-info tip" hidden="true"></span>
+	</div>
+	<div class="dropdown top-right" style="opacity:1.0;">
+		<button class="btn btn-secondary btn-xs dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding: 0 .25rem; line-height: 0.8;">
+			<svg class="center-block img-responsive" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 100 100" preserveAspectRatio="xMidYMin" style="width: 25px;">
+				<path d="M31,31H20a1,1,0,0,1,0-2H31A1,1,0,0,1,31,31Z"/>
+				<path d="M80,31H40a1,1,0,0,1,0-2H80A1,1,0,0,1,80,31Z"/>
+				<path d="M35.12,35a5,5,0,1,1,5-5A5,5,0,0,1,35.12,35Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,35.12,27Z"/>
+				<path d="M61,51H20a1,1,0,0,1,0-2H61A1,1,0,0,1,61,51Z"/>
+				<path d="M80,51H70a1,1,0,0,1,0-2H80A1,1,0,0,1,80,51Z"/>
+				<path d="M65.12,55a5,5,0,1,1,5-5A5,5,0,0,1,65.12,55Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,65.12,47Z"/>
+				<path d="M41,71H20a1,1,0,0,1,0-2H41A1,1,0,0,1,41,71Z"/>
+				<path d="M80,71H50a1,1,0,0,1,0-2H80A1,1,0,0,1,80,71Z"/>
+				<path d="M45.12,75a5,5,0,1,1,5-5A5,5,0,0,1,45.12,75Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,45.12,67Z"/>
+			</svg>
+		</button>
+		<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+			<h6 class="dropdown-header">Muscle Filter</h6>
+			<div class="list-group">
+				<div class="input-group">
+					<span class="form-control no-left-border">Target</span>
+					<span class="input-group-addon no-left-border">
+						<input type="checkbox" checked="checked">
+					</span>
+				</div>
+				<div class="input-group">
+					<span class="form-control no-left-border">Synergists</span>
+					<span class="input-group-addon no-left-border">
+						<input type="checkbox"  checked="checked">
+					</span>
+				</div>
+				<div class="input-group">
+					<span class="form-control no-left-border">Stabilizers</span>
+					<span class="input-group-addon no-left-border">
+						<input type="checkbox" checked="checked">
+					</span>
+				</div>
+				<div class="input-group">
+					<span class="form-control no-left-border no-bottom-border">Dynamic Stabilizers</span>
+					<span class="input-group-addon no-left-border no-bottom-border">
+						<input type="checkbox" checked="checked">
+					</span>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 <!-- 
@@ -140,6 +199,20 @@ Left column
 -->
 <div class="col-sm-6 pull-sm-6">
 <!-- 
+Metric selection
+-->
+<div class="btn-group" data-toggle="buttons" style="width: 100%;">
+  <label class="btn btn-secondary active" style="width: 33.5%;" onclick="metricChanged(event)">
+    <input type="radio" name="metric" value="intensity" autocomplete="off" checked>Intensity
+  </label>
+  <label class="btn btn-secondary" style="width: 33.4%;" onclick="metricChanged(event)">
+    <input type="radio" name="metric" value="rvolume" autocomplete="off">Volume
+  </label>
+  <label class="btn btn-secondary" style="width: 33.5%;" onclick="metricChanged(event)">
+    <input type="radio" name="metric" value="duration" autocomplete="off">Duration
+  </label>
+</div>
+<!-- 
 Date range input/display
 -->
 <div class="card">
@@ -155,32 +228,6 @@ Date range input/display
 		<div class="input-group">
 			<span class="input-group-addon">End</span>
 			<input class="form-control no-left-border text-xs-right" type="date" id="end-date-input">
-		</div>
-	</div>
-</div>
-<!-- 
-Metric selection
--->
-<div class="card">
-	<div class="card-header">Metric</div>
-	<div class="list-group">
-		<div class="input-group">
-			<span class="form-control no-left-border">Intensity</span>
-			<span class="input-group-addon no-left-border">
-				<input type="radio" name="metric" value="intensity" checked="checked" onchange="metricChanged(event)">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Volume</span>
-			<span class="input-group-addon no-left-border">
-				<input type="radio" name="metric" value="rvolume" onchange="metricChanged(event)">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Duration</span>
-			<span class="input-group-addon no-left-border">
-				<input type="radio" name="metric" value="duration" onchange="metricChanged(event)">
-			</span>
 		</div>
 	</div>
 </div>
@@ -218,38 +265,6 @@ PR filter selection
 			<span class="form-control no-left-border">First</span>
 			<span class="input-group-addon no-left-border">
 				<input type="checkbox" name="pr-filter" value="first" onchange="prFilterChanged(event)">
-			</span>
-		</div>
-	</div>
-</div>
-<!-- 
-Muscle role selection
--->
-<div class="card">
-	<div class="card-header">Muscle Filters</div>
-	<div class="list-group">
-		<div class="input-group">
-			<span class="form-control no-left-border">Target</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" checked="checked">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Synergists</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox"  checked="checked">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Stabilizers</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" checked="checked">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Dynamic Stabilizers</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" checked="checked">
 			</span>
 		</div>
 	</div>
