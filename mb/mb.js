@@ -987,7 +987,7 @@ function dismissAndShow(event) {
 	let targetModal = $(event.target.attributes["data-target"].value);
 	dismissModal
 		.modal("hide")
-		.on("hidden.bs.modal", _ => targetModal.modal("show"));
+		.one("hidden.bs.modal", _ => targetModal.modal("show"));
 }
 
 /*
