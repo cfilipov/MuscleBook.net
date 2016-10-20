@@ -6,7 +6,7 @@
 
 [MuscleBook.net](http://musclebook.net) is a web app for analyzing and logging strength training and body building data. MuscleBook has no server and works completely offline using [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). Muscle Book aims to present workout data in a way that highlights and encourages [progressive overload](https://en.wikipedia.org/wiki/Progressive_overload) and long term commitment. There are many workout tracking apps already available, what sets this one apart is the focus on data. If you want a workout app that guides you through a routine this isn't the tool for you. On the other hand, if you manage the routine yourself and track your workouts in a spreadsheet with a bunch of formulas and charts, you're probably the kind of person who would like this app.
 
-**[Demo](http://musclebook.net?data=sample-data.json) with sample data.**
+**[Demo](http://musclebook.net?demo) with sample data.**
 
 ## Browser Support
 
