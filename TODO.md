@@ -12,7 +12,7 @@
 ## Items
 
 * [ ] ⚠️ Firefox not loading
-* [ ] ❗️ Move all calculations into inner dictionary
+* [ ] ~~❗️ Move all calculations into inner dictionary~~
 * [x] ~~⚠️ Seconds saved as seconds / 1000~~
 * [x] ~~⚠️ License text not scrolling~~
 * [ ] ⚠️ No tool tip on anatomy diagrams with no data
@@ -20,11 +20,14 @@
 * [x] ~~⚠️ Low volume workouts get completely filtered out of calendar graph~~
 * [x] ~~⚠️ iOS overscroll looks like shit in web clip~~
 * [x] ~~❗️ Link to GutHub project~~
-* [ ] ❗️ Faster re-calculations by using PR table
+* [ ] ❔ Faster re-calculations by using PR table
 * [ ] ❗️ Define volume and intensity for duration-based workouts (planks)
 * [ ] ❕ Add more bodyweight and only ring exercises to exercise lookup
+* [ ] ‼️ Debug mode indicator
+	* [ ] Url param `debug` to enable
+	* [ ] Make debug actions visible only on debug mode
 * [ ] ❔ User-defined exercises
-	* Tis brings up a lot of issues with consistency when sharing data
+	* This brings up a lot of issues with consistency when sharing data
 * [ ] ❕ Ability to delete entries
 * [ ] ❕ Ability to insert past entries
 * [ ] Raw data browser

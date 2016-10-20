@@ -44,8 +44,8 @@ Navigation
       <a class="nav-link dropdown-toggle" href="http://example.com" id="supportedContentDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding-bottom: 0; padding-top: 0;">&#9776;</a>
       <div class="dropdown-menu" aria-labelledby="supportedContentDropdown">
 			<button type="button" class="dropdown-item" data-toggle="modal" data-backdrop="static" data-target="#select-exercise-modal">Add Set</button>
-			<button type="button" class="dropdown-item" data-backdrop="static" data-toggle="modal" data-target="#import-data-modal">Import</button>
-			<button type="button" class="dropdown-item" data-backdrop="static" onclick="exportJSON();" download>Export</button>
+			<button type="button" class="dropdown-item demo-hidden" data-backdrop="static" data-toggle="modal" data-target="#import-data-modal">Import</button>
+			<button type="button" class="dropdown-item demo-hidden" data-backdrop="static" onclick="exportJSON();" download>Export</button>
 			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#about-modal">About</button>
 			<div class="dropdown-divider"></div>
 			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#debug-options-modal">Debug</button>
@@ -58,6 +58,7 @@ Navigation
 	<span class="hidden-sm-down hidden-lg-up">md</span>
 	<span class="hidden-md-down hidden-xl-up visible">lg</span>
 	<span class="hidden-lg-down visible">xl</span>
+	<span class="demo-show" style="color:#de2d26; font-weight:bold;" hidden="true">DEMO</span>
   </div>
 </nav>
 <!-- 
@@ -113,11 +114,10 @@ Anatomy diagram
 			<img src="lib/noun_471105_cc.svg" style="width: 25px;">
 		</button>
 		<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-			<h6 class="dropdown-header">Muscle Filter</h6>
 			<div class="list-group">
 				<div class="input-group">
-					<span class="form-control no-left-border">Target</span>
-					<span class="input-group-addon no-left-border">
+					<span class="form-control no-left-border no-bottom-border no-top-border">Target</span>
+					<span class="input-group-addon no-left-border no-top-border">
 						<input type="checkbox" checked="checked">
 					</span>
 				</div>

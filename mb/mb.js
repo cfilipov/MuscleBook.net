@@ -18,34 +18,40 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
- Entry Fields
-+--------------+------------+
-| id           | Input      |
-| xid          | Input      |
-| start        | Input      |
-| duration     | Input      |
-| reps         | Input      |
-| weight       | Input      |
-| asweight     | Input      |
-| bodyweight   | Input      |
-| failure      | Input      |
-| warmup       | Input      |
-| unit         | Input      |
-| exerciseName | Deprecated |
-| netweight    | Derived    |
-| e1rm         | Derived    |
-| volume       | Derived    |
-| workout      | Aggregate  |
-| intensity    | Aggregate  |
-| xset         | Aggregate  |
-| rset         | Aggregate  |
-| xvolume      | Aggregate  |
-| tvolme       | Aggregate  |
-| rvolume      | Aggregate  |
-| xduration    | Aggregate  |
-| tduration    | Aggregate  |
-| prs          | Aggregate  |
-+--------------+------------+
+
+ entry fields
++--------------+
+| id           |
+| xid          |
+| start        |
+| duration     |
+| reps         |
+| weight       |
+| asweight     |
+| bodyweight   |
+| failure      |
+| warmup       |
+| unit         |
+| exerciseName |     
+| xcalc -------|-----+
++--------------+     |
+                     |
+ xcalc fields    <---+
++--------------+ 
+| netweight    |
+| e1rm         |
+| volume       |
+| workout      |
+| intensity    |
+| xset         |
+| rset         |
+| xvolume      |
+| tvolme       |
+| rvolume      |
+| xduration    |
+| tduration    |
+| prs          |
++--------------+
 
 Every entry in the database is a workout "set" in the sense of "sets, reps, weight". 
 Every entry of a given exercise will have both `rset` and `xset` fields.
@@ -129,33 +135,33 @@ function loadFromDB() {
 function metricReducer(group) {
 	let reducer = reductio();
 	reducer.value("intensity")
-		.avg(e => e.failure ? 1.0 : Math.max(0.1, e.intensity))
+		.avg(e => e.failure ? 1.0 : Math.max(0.1, e.xcalc.intensity))
 		.filter(e => !e.warmup)
 		.alias({
 			value: d => d.avg || 0,
 			formatted: d => `${(d.value() * 100).toFixed(2)}%`
 		});
 	reducer.value("weight")
-		.avg(e => e.netweight)
-		.filter(e => !e.warmup && e.intensity > 0.5)
+		.avg(e => e.xcalc.netweight)
+		.filter(e => !e.warmup && e.xcalc.intensity > 0.5)
 		.alias({ 
 			value: d => d.avg || 0,
 			formatted: d => `${d.value().toLocaleString()}lbs`
 		});
 	reducer.value("rvolume")
-		.max(e => e.rvolume)
+		.max(e => e.xcalc.rvolume)
 		.alias({
 			value: d => d.max || 0,
 			formatted: d => `${(d.value() * 100).toFixed(2)}%`
 		});
 	reducer.value("volume")
-		.max(e => e.xvolume)
-		.alias({ 
+		.max(e => e.xcalc.xvolume)
+		.alias({
 			value: d => d.max || 0,
 			formatted: d => `${d.value().toLocaleString()}lbs`
 		});
 	reducer.value("duration")
-		.max(e => e.tduration)
+		.max(e => e.xcalc.tduration)
 		.alias({
 			value: d => d.max || 0,
 			formatted: d => formatDuration(d.value())
@@ -235,16 +241,17 @@ function calculateE1RM(reps, weight) {
 }
 
 function calculateEntry(entry) {
-	entry.netweight = calculateNetWeight(entry);
-	entry.e1rm = calculateE1RM(entry.reps, entry.weight);
-	entry.volume = calculateVolume(entry);
+	entry.xcalc.netweight = calculateNetWeight(entry);
+	entry.xcalc.e1rm = calculateE1RM(entry.reps, entry.weight);
+	entry.xcalc.volume = calculateVolume(entry);
 }
 
 function fillEntry(entry, entries) {
+	entry.xcalc = {};
 	calculateEntry(entry);
 
 	let exercise = exerciseLookup[entry.xid];
-	entry.muscles = exercise != null 
+	entry.xcalc.muscles = exercise != null 
 		? displayableMuscleComponents(exercise.muscles).map(m => m.fmaID)
 		: [];
 
@@ -266,64 +273,64 @@ function fillEntry(entry, entries) {
 			: prevWorkoutID;
 	}
 
-	entry.intensity = stats.weightMax.value > 0
-		? entry.netweight / stats.weightMax.value
+	entry.xcalc.intensity = stats.weightMax.value > 0
+		? entry.xcalc.netweight / stats.weightMax.value
 		: 1.0;
 
-	entry.xset = (stats.prevEntryX.entry
-		? stats.prevEntryX.entry.xset
+	entry.xcalc.xset = (stats.prevEntryX.entry
+		? stats.prevEntryX.entry.xcalc.xset
 		: 0) + 1;
 
-	entry.rset = (stats.prevEntryR.entry
-		? stats.prevEntryR.entry.rset
+	entry.xcalc.rset = (stats.prevEntryR.entry
+		? stats.prevEntryR.entry.xcalc.rset
 		: 0) + 1;
 
-	entry.xvolume = (stats.prevEntryX.entry
-		? stats.prevEntryX.entry.xvolume
-		: 0) + entry.volume;
+	entry.xcalc.xvolume = (stats.prevEntryX.entry
+		? stats.prevEntryX.entry.xcalc.xvolume
+		: 0) + entry.xcalc.volume;
 
-	entry.tvolume = (stats.prevEntryX.entry
-		? stats.prevEntry.entry.tvolume
-		: 0) + entry.volume;
+	entry.xcalc.tvolume = (stats.prevEntryX.entry
+		? stats.prevEntry.entry.xcalc.tvolume
+		: 0) + entry.xcalc.volume;
 
-	entry.rvolume = stats.xvolumeMax.value > 0
-		? entry.xvolume / stats.xvolumeMax.value
+	entry.xcalc.rvolume = stats.xvolumeMax.value > 0
+		? entry.xcalc.xvolume / stats.xvolumeMax.value
 		: 1.0;
 
 	if (jQuery.isNumeric(entry.duration)) {
-		entry.xduration = (stats.prevEntryX.entry
-			? stats.prevEntryX.entry.xduration
+		entry.xcalc.xduration = (stats.prevEntryX.entry
+			? stats.prevEntryX.entry.xcalc.xduration
 			: 0) + entry.duration;
 
-		entry.tduration = stats.firstEntryW
+		entry.xcalc.tduration = stats.firstEntryW
 			? moment.duration(entry.start - stats.firstEntryW.start).asSeconds() + entry.duration
 			: entry.duration;
 	}
 
 	// Update Personal Records
-	entry.pr = [];
-	if (entry.netweight > stats.weightMax.value) { entry.pr.push(PR.WEIGHT); }
-	if (entry.reps > stats.repsMax.value) { entry.pr.push(PR.REPS); }
-	if (entry.xvolume > stats.xvolumeMax.value) { entry.pr.push(PR.VOLUME); }
-	if (entry.rset > stats.rsetMax.value) { entry.pr.push(PR.SETS); }
+	entry.xcalc.prs = [];
+	if (entry.xcalc.netweight > stats.weightMax.value) { entry.xcalc.prs.push(PR.WEIGHT); }
+	if (entry.reps > stats.repsMax.value) { entry.xcalc.prs.push(PR.REPS); }
+	if (entry.xcalc.xvolume > stats.xvolumeMax.value) { entry.xcalc.prs.push(PR.VOLUME); }
+	if (entry.xcalc.rset > stats.rsetMax.value) { entry.xcalc.prs.push(PR.SETS); }
 
 	/* 
 	Sanity checks
 	*/
 
 	if (jQuery.isNumeric(entry.duration)) {
-		console.assert(jQuery.isNumeric(entry.xduration) && entry.duration >= 0, 
+		console.assert(jQuery.isNumeric(entry.xcalc.xduration) && entry.duration >= 0, 
 			`Invalid xduration: ${JSON.stringify(entry)}`);
-		console.assert(jQuery.isNumeric(entry.tduration) && entry.duration >= 0, 
+		console.assert(jQuery.isNumeric(entry.xcalc.tduration) && entry.duration >= 0, 
 			`Invalid tduration: ${JSON.stringify(entry)}`);
 	}
 	console.assert(jQuery.isNumeric(entry.weight) && entry.weight >= 0, 
 		`Invalid weight: ${JSON.stringify(entry)}`);
-	console.assert(jQuery.isNumeric(entry.netweight) && entry.netweight >= 0, 
+	console.assert(jQuery.isNumeric(entry.xcalc.netweight) && entry.xcalc.netweight >= 0, 
 		`Invalid netweight: ${JSON.stringify(entry)}`);
-	console.assert(Number.isInteger(entry.xset), 
+	console.assert(Number.isInteger(entry.xcalc.xset), 
 		`Invalid xset: ${JSON.stringify(entry)}`);
-	console.assert(Number.isInteger(entry.rset), 
+	console.assert(Number.isInteger(entry.xcalc.rset), 
 		`Invalid rset: ${JSON.stringify(entry)}`);
 }
 
@@ -341,7 +348,7 @@ function getEntryStats(e, data) {
 	};
 
 	for (let d of data) {
-		if (e.weight && !e.netweight) {
+		if (e.weight && !e.xcalc.netweight) {
 			throw new Error("Missing netweight: " + entry);
 		}
 		
@@ -361,7 +368,7 @@ function getEntryStats(e, data) {
 				stats.prevEntryX.entry = d;
 				stats.prevEntryX.value = d.start; 
 			}
-		
+
 		if (stats.firstEntryW == null && d.workout == e.workout) 
 			{
 				stats.firstEntryW = d;
@@ -370,41 +377,41 @@ function getEntryStats(e, data) {
 		if (d.start > stats.prevEntryR.value && 
 			d.xid == e.xid && 
 			d.reps == e.reps && 
-			d.netweight == e.netweight &&
+			d.xcalc.netweight == e.xcalc.netweight &&
 			d.workout == e.workout)
 			{ 
 				stats.prevEntryR.entry = d;
 				stats.prevEntryR.value = d.start; 
 			}
 
-		if (d.netweight > stats.weightMax.value && d.xid == e.xid)
+		if (d.xcalc.netweight > stats.weightMax.value && d.xid == e.xid)
 			{ 
 				stats.weightMax.entry = d;
-				stats.weightMax.value = d.netweight; 
+				stats.weightMax.value = d.xcalc.netweight; 
 			}
 
 		if (d.reps > stats.repsMax.value &&
 			d.xid == e.xid && 
-			d.netweight == e.netweight)
+			d.xcalc.netweight == e.xcalc.netweight)
 			{ 
 				stats.repsMax.entry = d;
 				stats.repsMax.value = d.reps; 
 			}
 
-		if (d.rset > stats.rsetMax.value &&
+		if (d.xcalc.rset > stats.rsetMax.value &&
 			d.xid == e.xid &&
 			d.reps == e.reps && 
-			d.netweight == e.netweight)
+			d.xcalc.netweight == e.xcalc.netweight)
 			{ 
 				stats.rsetMax.entry = d;
-				stats.rsetMax.value = d.rset; 
+				stats.rsetMax.value = d.xcalc.rset; 
 			}
 
-		if (d.xvolume > stats.xvolumeMax.value && 
+		if (d.xcalc.xvolume > stats.xvolumeMax.value && 
 			d.xid == e.xid)
 			{ 
 				stats.xvolumeMax.entry = d;
-				stats.xvolumeMax.value = d.xvolume; 
+				stats.xvolumeMax.value = d.xcalc.xvolume; 
 			}
 	};
 
@@ -516,8 +523,7 @@ function recalculateAllEntries(progressObserver) {
 	store.openCursor().onsuccess = function(event) {
 		let cursor = event.target.result;
 		if (cursor) {
-			const entry = cursor.value;
-
+			const entry = copyEntryInput(cursor.value);
 			fillEntry(entry, entries);
 			entries.push(entry)
 			// TODO: handle store.onerror
@@ -549,6 +555,24 @@ function deleteAllEntries() {
     };
 }
 
+function copyEntryInput(entry) {
+	const e = {};
+	e.id = +entry.id;
+	e.workout = +entry.workout;
+	e.xid = +entry.xid;
+	e.exerciseName = entry.exerciseName;
+	e.start = new Date(entry.start);
+	e.duration = +entry.duration > 0 ? +entry.duration : null;
+	e.reps = +entry.reps > 0 ? +entry.reps : null;
+	e.weight = +entry.weight > 0 ? +entry.weight : null;
+	e.asweight = +entry.asweight > 0 ? +entry.asweight : null;
+	e.bodyweight = +entry.bodyweight > 0 ? +entry.bodyweight : null;
+	e.failure = Boolean(entry.failure);
+	e.warmup = Boolean(entry.warmup);
+	e.unit = "lbs"; // only lbs for now
+	return e;
+}
+
 function importAllEntries(entries, progressObserver) {
 	let tx = db.transaction(["entries"], "readwrite");
 	let store = tx.objectStore("entries");
@@ -563,32 +587,7 @@ function importAllEntries(entries, progressObserver) {
 	progressEvent.total = entries.length-1;
 	putNext = _ => {
 		if (i < entries.length) {
-			const inentry = entries[i];
-			const entry = {};
-			
-			/* 
-			Input Fields 
-			*/
-
-			entry.id = +inentry.id;
-			entry.workout = +inentry.workout;
-			entry.xid = +inentry.xid;
-			entry.exerciseName = inentry.exerciseName;
-			entry.start = new Date(inentry.start);
-			entry.duration = +inentry.duration;
-			entry.reps = +inentry.reps;
-			entry.weight = +inentry.weight;
-			entry.asweight = +inentry.asweight;
-			entry.bodyweight = +inentry.bodyweight;
-			entry.failure = +inentry.failure;
-			entry.warmup = +inentry.warmup;
-			entry.unit = "lbs"; // only lbs for now
-
-			/*
-			Finally, store the entry (put, each entry must already have an entryID), 
-			report progress, and continue (if there are more entries).
-			*/
-
+			const entry = copyEntryInput(entries[i]);
 			store.put(entry).onsuccess = putNext;
 			progressEvent.loaded = i;
 			progressObserver.onNext(progressEvent);
@@ -707,7 +706,7 @@ function valueAccessor(d) {
 }
 
 function exportJSON() {
-    let data = entries.all();
+    let data = entries.all().map(e => copyEntryInput(e));
     download(JSON.stringify(data, null, 4), "workouts.json", "application/json");
 }
 
@@ -865,24 +864,33 @@ function showNewEntryModal(xid) {
 }
 
 function saveEntry() {
-	let entry = this.entryFromFields();
-	if (!entry) { return; }
+	let entry = entryFromFields();
+	if (!entry) return;
+	if (demoMode) {
+		entries.add([entry]);
+		postSaveEntry();
+		return;
+	}
 	let store = db.transaction("entries", "readwrite").objectStore("entries");
 	let req = store.add(entry);
 	req.onsuccess = function (event) {
 		entry.id = event.target.result;
 		entries.add([entry]);
-		$("#newentry-modal").modal("hide");
-		stopwatch.reset();
-        $("#weight-input").val("");
-        $("#reps-input").val("");
-        $("#warmup-input").val("");
-        $("#failure-input").val("");
-		dc.redrawAll();
+		postSaveEntry();
 	};
 	req.onerror = function() {
 		alert("addPublication error", this.error);
 	};
+}
+
+function postSaveEntry() {
+	$("#newentry-modal").modal("hide");
+	stopwatch.reset();
+	$("#weight-input").val("");
+	$("#reps-input").val("");
+	$("#warmup-input").val("");
+	$("#failure-input").val("");
+	dc.redrawAll();
 }
 
 function importSelectedFile() {
@@ -1017,14 +1025,25 @@ if (("standalone" in window.navigator) && window.navigator.standalone) {
 	iNoBounce.disable();
 }
 
-/*
-Disable 300ms click delay on mobile
+// http://stackoverflow.com/a/2880929/952123
+var match,
+	pl     = /\+/g,  // Regex for replacing addition symbol with a space
+	search = /([^&=]+)=?([^&]*)/g,
+	decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+	query  = window.location.search.substring(1);
+var urlParams = {};
+while (match = search.exec(query))
+	urlParams[decode(match[1])] = decode(match[2]);
+const demoMode = urlParams["demo"] !== undefined ? true : false;
+var remoteData = demoMode ? "sample-data.json" : urlParams["data"];
 
-This screws up tool tips on charts on mobile
-*/
-// $(function() {
-//     FastClick.attach(document.body);
-// });
+if (demoMode) {
+	d3.selectAll(".demo-show").attr("hidden", null);
+	d3.selectAll(".demo-hidden").attr("hidden", true);
+}
+
+if (remoteData) loadFromRemoteData(remoteData);
+else loadFromDB();
 
 let windowWidth = window.innerWidth;
 let daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -1068,8 +1087,8 @@ var colorScaleProxy = new Proxy(function() {}, {
 
 let entries = crossfilter([]);
 let dateDimension = entries.dimension(d => d.start);
-let muscleDimension = entries.dimension(d => d.muscles, true);
-let prDimension = entries.dimension(d => d.pr, true);
+let muscleDimension = entries.dimension(d => d.xcalc.muscles, true);
+let prDimension = entries.dimension(d => d.xcalc.prs, true);
 let excerciseDimension = entries.dimension(d => d.xid);
 
 let dayOfWeek = entries.dimension(d => {
@@ -1337,17 +1356,3 @@ window.onresize = function(event) {
     resizeAllCharts();
     dc.renderAll();
 };
-
-// http://stackoverflow.com/a/2880929/952123
-var match,
-	pl     = /\+/g,  // Regex for replacing addition symbol with a space
-	search = /([^&=]+)=?([^&]*)/g,
-	decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-	query  = window.location.search.substring(1);
-var urlParams = {};
-while (match = search.exec(query))
-	urlParams[decode(match[1])] = decode(match[2]);
-var remoteData = urlParams["data"];
-
-if (remoteData) loadFromRemoteData(remoteData);
-else loadFromDB();

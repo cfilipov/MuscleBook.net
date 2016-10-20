@@ -26,6 +26,9 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 	text-decoration: none;
 	padding: 0;
 }
+.no-top-border {
+	border-top: none !important;
+}
 .no-bottom-border {
 	border-bottom: none !important;
 }
