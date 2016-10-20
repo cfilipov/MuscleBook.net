@@ -1,6 +1,6 @@
 CACHE MANIFEST
 # Muscle Book
-# Cache manifest version 0.0.0-alpha.3
+# Cache manifest version 0.0.0-alpha.4
 index.html
 Icon512.png
 mb/anatomy.js
@@ -11,21 +11,22 @@ mb/mb.css
 mb/mb.js
 mb/muscles.js
 mb/posterior.svg
-lib/bootstrap-4.0.0-alpha.4.min.css
-lib/bootstrap-4.0.0-alpha.4.min.js
-lib/bootstrap.min.css.map
+lib/bootstrap.min.css
+lib/bootstrap.min.js
 lib/colorbrewer.js
 lib/crossfilter.js
 lib/d3.v3.min.js
 lib/dc.css
 lib/dc.js
-lib/dc.js.map
 lib/download.js
-lib/jquery-3.0.0.min.js
+lib/fastclick.js
+lib/inobounce.min.js
+lib/jquery.min.js
 lib/list.min.js
 lib/moment.min.js
+lib/noun_471105_cc.svg
 lib/reductio.js
-lib/tether-1.2.0.min.js
+lib/tether.min.js
 
 NETWORK:
 sample-data.json

@@ -23,10 +23,11 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="viewport" content="user-scalable=no, width=device-width">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
 	<meta name="author" content="Cristian Filipov">
-    <link rel="stylesheet" type="text/css" href="lib/bootstrap-4.0.0-alpha.4.min.css">
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="lib/dc.css">
     <link rel="stylesheet" type="text/css" href="mb/mb.css">
 	<link rel="apple-touch-icon" href="Icon512.png" />
@@ -37,43 +38,32 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 <!-- 
 Navigation
 -->
-<nav class="navbar navbar-full navbar-fixed-top navbar-dark bg-inverse">
-	<div class="dropdown">
-		<button class="btn btn-link btn-no-outline dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true"
-			aria-expanded="false">
-            &#9776;
-        </button>
-		<div class="dropdown-menu" aria-labelledby="dropdownMenu2">
-			<h5 class="dropdown-header">Muscle Book</h5>
+<nav class="navbar navbar-dark bg-inverse navbar-full navbar-fixed-top">
+  <ul class="nav navbar-nav">
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="http://example.com" id="supportedContentDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding-bottom: 0; padding-top: 0;">&#9776;</a>
+      <div class="dropdown-menu" aria-labelledby="supportedContentDropdown">
 			<button type="button" class="dropdown-item" data-toggle="modal" data-backdrop="static" data-target="#select-exercise-modal">Add Set</button>
 			<button type="button" class="dropdown-item" data-backdrop="static" data-toggle="modal" data-target="#import-data-modal">Import</button>
 			<button type="button" class="dropdown-item" data-backdrop="static" onclick="exportJSON();" download>Export</button>
 			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#about-modal">About</button>
 			<div class="dropdown-divider"></div>
 			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#debug-options-modal">Debug</button>
-		</div>
-		<div class="pull-xs-right">
-			<div class="col-xs-6 col-sm-4">
-				<span class="hidden-sm-up">xs</span>
-			</div>
-			<div class="col-xs-6 col-sm-4">
-				<span class="hidden-xs-down hidden-md-up">sm</span>
-			</div>
-			<div class="col-xs-6 col-sm-4">
-				<span class="hidden-sm-down hidden-lg-up">md</span>
-			</div>
-			<div class="col-xs-6 col-sm-4">
-				<span class="hidden-md-down hidden-xl-up visible">lg</span>
-			</div>
-			<div class="col-xs-6 col-sm-4">
-				<span class="hidden-lg-down visible">xl</span>
-			</div>
-		</div>
-	</div>
+      </div>
+    </li>
+  </ul>
+  <div class="pull-xs-right">
+	<span class="hidden-sm-up">xs</span>
+	<span class="hidden-xs-down hidden-md-up">sm</span>
+	<span class="hidden-sm-down hidden-lg-up">md</span>
+	<span class="hidden-md-down hidden-xl-up visible">lg</span>
+	<span class="hidden-lg-down visible">xl</span>
+  </div>
 </nav>
 <!-- 
 Main content
 -->
+<div class="scrollable">
 <div class="container">
 <div class="row">
 <!-- 
@@ -120,17 +110,7 @@ Anatomy diagram
 	</div>
 	<div class="dropdown top-right" style="opacity:1.0;">
 		<button class="btn btn-secondary btn-xs dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding: 0 .25rem; line-height: 0.8;">
-			<svg class="center-block img-responsive" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 100 100" preserveAspectRatio="xMidYMin" style="width: 25px;">
-				<path d="M31,31H20a1,1,0,0,1,0-2H31A1,1,0,0,1,31,31Z"/>
-				<path d="M80,31H40a1,1,0,0,1,0-2H80A1,1,0,0,1,80,31Z"/>
-				<path d="M35.12,35a5,5,0,1,1,5-5A5,5,0,0,1,35.12,35Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,35.12,27Z"/>
-				<path d="M61,51H20a1,1,0,0,1,0-2H61A1,1,0,0,1,61,51Z"/>
-				<path d="M80,51H70a1,1,0,0,1,0-2H80A1,1,0,0,1,80,51Z"/>
-				<path d="M65.12,55a5,5,0,1,1,5-5A5,5,0,0,1,65.12,55Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,65.12,47Z"/>
-				<path d="M41,71H20a1,1,0,0,1,0-2H41A1,1,0,0,1,41,71Z"/>
-				<path d="M80,71H50a1,1,0,0,1,0-2H80A1,1,0,0,1,80,71Z"/>
-				<path d="M45.12,75a5,5,0,1,1,5-5A5,5,0,0,1,45.12,75Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,45.12,67Z"/>
-			</svg>
+			<img src="lib/noun_471105_cc.svg" style="width: 25px;">
 		</button>
 		<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
 			<h6 class="dropdown-header">Muscle Filter</h6>
@@ -289,6 +269,7 @@ End of main content
 -->
 </div>
 </div>
+</div>
 <!-- 
 Modal: select exercises
  -->
@@ -348,7 +329,7 @@ Modal: new entry
 						</div>
 						<div id="entry-input-opt-reps" class="input-group opt">
 							<span class="input-group-addon">Reps</span>
-							<input class="form-control no-left-border text-xs-right" type="number" id="reps-input">
+							<input class="form-control no-left-border text-xs-right" type="number" pattern="[0-9]*" id="reps-input">
 						</div>
 						<div id="entry-input-opt-assistance" class="input-group opt">
 							<span class="input-group-addon">Assistance weight</span>
@@ -407,7 +388,7 @@ Modal: import data
 							<small id="fileHelp" class="form-text text-muted">Import may take a while, please be patient.</small>
 						</div>
 						<div id="import-button-container" class="collapse">
-							<button id="import-button" type="button" class="btn btn-block btn-primary">Import</button>
+							<button id="import-button" type="button" class="btn btn-block btn-primary" onclick="importSelectedFile(event)">Import</button>
 						</div>
 					</div>
 				</form>
@@ -474,7 +455,7 @@ Modal: exercise details
 	</div>
 </div>
 <!-- 
-Modal: debug options
+Modal: about
  -->
 <div class="modal fade" id="about-modal">
 	<div class="modal-dialog" role="document">
@@ -486,6 +467,8 @@ Modal: debug options
 				<h4 class="modal-title">About Muscle Book</h4>
 			</div>
 			<div class="modal-body">
+				<h5><a href="https://github.com/cfilipov/MuscleBook.net">GitHub Project Page<a></h5>
+				<br />
 				<p>Copyright (C) 2016  Cristian Filipov</p>
 				<br />
 				<p>MuscleBook is free software: you can redistribute it and/or modify
@@ -499,8 +482,97 @@ Modal: debug options
 				GNU Affero General Public License for more details.</p>				
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss="modal" data-toggle="modal" data-target="#license-modal">View Full License</button>
+				<button type="button" class="btn btn-secondary" data-dismiss-target="#about-modal" data-target="#credits-modal" onclick="dismissAndShow(event);">Credits</button>
+				<button type="button" class="btn btn-secondary" data-dismiss-target="#about-modal" data-target="#license-modal" onclick="dismissAndShow(event);">View Full License</button>
 			</div>
+		</div>
+	</div>
+</div>
+<!-- 
+Modal: credits
+ -->
+<div class="modal fade" id="credits-modal">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+				<h4 class="modal-title">Credits</h4>
+			</div>
+			<div class="modal-body no-padding">
+				<ul class="list-group">
+					<li class="list-group-item">
+						<span><a href="https://github.com/cfilipov">Cristian Filipov</a></span>
+						<span class="pull-xs-right">Author</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://predator5791.deviantart.com/art/Interactive-Muscular-Anatomy-145463634">Daniel Gomez</a></span>
+						<span class="pull-xs-right">Anatomy Artwork</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://sig.biostr.washington.edu/projects/fm/AboutFM.html">Foundational Model of Anatomy (FMA)</a></span>
+						<span class="pull-xs-right">Anatomy Data</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://getbootstrap.com/">Bootstrap</a></span>
+						<span class="pull-xs-right">Front-end framework</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="https://jquery.com/">jQuery</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="https://d3js.org">d3</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="https://dc-js.github.io/dc.js/">dc.js</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://crossfilter.github.io/crossfilter/">crossfilter</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="https://github.com/crossfilter/reductio">reductio</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://momentjs.com/">moment.js</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://colorbrewer2.org/">colorbrewer2</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="https://github.com/lazd/iNoBounce">iNoBounce</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="https://github.com/ftlabs/fastclick">fastclick</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://www.listjs.com/">list.js</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://danml.com/download.html">doanload.js</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span><a href="http://tether.io/">tether</a></span>
+						<span class="pull-xs-right">Javascript library</span>
+					</li>
+					<li class="list-group-item">
+						<span>"<a href="https://thenounproject.com/term/filter/471105">Filter</a>" By KΛPKLΛM, from <a href="http://thenounproject.com/">the Noun Project</a></span>
+						<img src="lib/noun_471105_cc.svg" class="pull-xs-right" style="width: 25px;">
+					</li>
+				</ul>	
+			</div>
+			<div class="modal-footer"></div>
 		</div>
 	</div>
 </div>
@@ -1147,51 +1219,6 @@ Modal: license
 				an absolute waiver of all civil liability in connection with the
 				Program, unless a warranty or assumption of liability accompanies a
 				copy of the Program in return for a fee.</p>
-
-				<p>END OF TERMS AND CONDITIONS</p>
-
-				<h3><a name="howto"></a>How to Apply These Terms to Your New Programs</h3>
-
-				<p>If you develop a new program, and you want it to be of the greatest
-				possible use to the public, the best way to achieve this is to make it
-				free software which everyone can redistribute and change under these terms.</p>
-
-				<p>To do so, attach the following notices to the program.  It is safest
-				to attach them to the start of each source file to most effectively
-				state the exclusion of warranty; and each file should have at least
-				the &quot;copyright&quot; line and a pointer to where the full notice is found.</p>
-
-				<pre>    &lt;one line to give the program's name and a brief idea of what it does.&gt;
-					Copyright (C) &lt;year&gt;  &lt;name of author&gt;
-
-					This program is free software: you can redistribute it and/or modify
-					it under the terms of the GNU Affero General Public License as
-					published by the Free Software Foundation, either version 3 of the
-					License, or (at your option) any later version.
-
-					This program is distributed in the hope that it will be useful,
-					but WITHOUT ANY WARRANTY; without even the implied warranty of
-					MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-					GNU Affero General Public License for more details.
-
-					You should have received a copy of the GNU Affero General Public License
-					along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
-				</pre>
-
-				<p>Also add information on how to contact you by electronic and paper mail.</p>
-
-				<p>If your software can interact with users remotely through a computer
-				network, you should also make sure that it provides a way for users to
-				get its source.  For example, if your program is a web application, its
-				interface could display a &quot;Source&quot; link that leads users to an archive
-				of the code.  There are many ways you could offer source, and different
-				solutions will be better for different programs; see section 13 for the
-				specific requirements.</p>
-
-				<p>You should also get your employer (if you work as a programmer) or school,
-				if any, to sign a &quot;copyright disclaimer&quot; for the program, if necessary.
-				For more information on this, and how to apply and follow the GNU AGPL, see
-				&lt;<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
 			</div>
 			<div class="modal-footer"></div>
 		</div>
@@ -1200,9 +1227,9 @@ Modal: license
 <!--
 External Sources
 -->
-<script src="lib/jquery-3.0.0.min.js"></script>
-<script src="lib/tether-1.2.0.min.js"></script>
-<script src="lib/bootstrap-4.0.0-alpha.4.min.js"></script>
+<script src="lib/jquery.min.js"></script>
+<script src="lib/tether.min.js"></script>
+<script src="lib/bootstrap.min.js"></script>
 <script src="lib/d3.v3.min.js"></script>
 <script src="lib/list.min.js"></script>
 <script src="lib/crossfilter.js"></script>
@@ -1211,6 +1238,8 @@ External Sources
 <script src="lib/moment.min.js"></script>
 <script src="lib/download.js"></script>
 <script src="lib/reductio.js"></script>
+<script src="lib/inobounce.min.js"></script>
+<script src="lib/fastclick.js"></script>
 <!-- 
 Muscle Book Sources 
 -->

@@ -220,9 +220,9 @@ function calculateVolume(d) {
 
 function calculateNetWeight(d) {
 	var total = 0;
-	if (d.weight != null) total += d.weight;
-	if (d.bodyweight != null) total += d.bodyweight;
-	if (d.asweight != null) total -= d.asweight;
+	if (jQuery.isNumeric(d.weight)) total += d.weight;
+	if (jQuery.isNumeric(d.bodyweight)) total += d.bodyweight;
+	if (jQuery.isNumeric(d.asweight)) total -= d.asweight;
 	return total;
 }
 
@@ -570,49 +570,19 @@ function importAllEntries(entries, progressObserver) {
 			Input Fields 
 			*/
 
-			entry.id = +inentry.workset_id;
-			entry.workout = +inentry.workout_id;
-			entry.xid = +inentry.exercise_id;
-			entry.exerciseName = inentry.exercise_name;
-			entry.start = new Date(inentry.start_time);
+			entry.id = +inentry.id;
+			entry.workout = +inentry.workout;
+			entry.xid = +inentry.xid;
+			entry.exerciseName = inentry.exerciseName;
+			entry.start = new Date(inentry.start);
 			entry.duration = +inentry.duration;
 			entry.reps = +inentry.reps;
 			entry.weight = +inentry.weight;
-			entry.asweight = +inentry.assistance_weight;
+			entry.asweight = +inentry.asweight;
 			entry.bodyweight = +inentry.bodyweight;
 			entry.failure = +inentry.failure;
 			entry.warmup = +inentry.warmup;
-			entry.unit = "lbs";
-
-			/*
-			Fixup
-			*/
-
-			if (entry.duration == entry.reps) {
-				entry.duration = null;
-			}
-
-			if (entry.bodyweight > 0 && entry.weight > 0 && entry.bodyweight < entry.weight) 
-			{
-				if (entry.id != 3231 || entry.id != 3230) {
-					console.log(`Unexpected fixup id: ${entry.id}: bodyweight: ${entry.bodyweight}, weight: ${entry.weight}`);
-				}
-				let w = entry.weight;
-				entry.weight = entry.bodyweight;
-				entry.bodyweight = w;
-				console.log(`Fixed id: ${entry.id}: bodyweight: ${entry.bodyweight}, weight: ${entry.weight}`);
-			}
-
-			if (entry.weight == 0) {
-				if (entry.xid == 426 || // pull up w/o bodyweight
-					entry.xid == 641 || // crunches
-					entry.xid == 539 || // chest dip
-					entry.xid == 424)   // chin up
-				{
-					entry.bodyweight = 180;
-					console.log(`Fixed id: ${entry.id}: bodyweight: ${entry.bodyweight}, weight: ${entry.weight}`);
-				}
-			}
+			entry.unit = "lbs"; // only lbs for now
 
 			/*
 			Finally, store the entry (put, each entry must already have an entryID), 
@@ -677,6 +647,7 @@ function Stopwatch() {
 	this.reset = function() {
 		this.initialTime = null;
 		_timeStart = _timeStop = _totalDuration = 0;
+		this.update();
 	};
 
 	this.duration = function() {
@@ -810,6 +781,23 @@ function titleForCurMetric(m,d) {
     }
 }
 
+function metricChanged(event) {
+	//if (!event.target.checked) return;
+	// let metric = event.target.value;
+	// hack to work around bootstrap not updating radio checked status
+	// this function is called on click of the label instead because onchange wont happen
+	let metric = event.target.firstElementChild.value;
+	updateMetric(metric);
+	dc.redrawAll()
+}
+
+function prFilterChanged(event) {
+	let types = new Set($("input:checkbox[name=pr-filter]:checked")
+		.map(function(){return $(this).val()}).get());
+	prDimension.filter(t => types.size > 0 ? types.has(t) : true);
+	dc.redrawAll();
+}
+
 function entryFromFields() {
 	let xid = d3.select("#newentry-modal")[0][0].dataset.xid
 	console.assert(xid !== null, "Missing xid");
@@ -829,7 +817,7 @@ function entryFromFields() {
 		});
 		if (start.isValid()) entry.start = start.toDate();
 	}
-	entry.duration = this.validate("#duration-input", v => moment.duration(v).asSeconds() > 0 ? moment.duration(v).asSeconds() / 1000 : null);
+	entry.duration = this.validate("#duration-input", v => moment.duration(v).asSeconds() > 0 ? moment.duration(v).asSeconds() : null);
 	entry.weight = this.validate("#weight-input", v => +v > 0 ? +v : null);
 	entry.reps = this.validate("#reps-input", v => +v > 0 ? +v : null);
 	entry.warmup = $("#warmup-input").prop("checked") ? true : false;
@@ -881,13 +869,11 @@ function saveEntry() {
 	if (!entry) { return; }
 	let store = db.transaction("entries", "readwrite").objectStore("entries");
 	let req = store.add(entry);
-	entries.add([entry]);
-	req.onsuccess = function (evt) {
+	req.onsuccess = function (event) {
+		entry.id = event.target.result;
+		entries.add([entry]);
 		$("#newentry-modal").modal("hide");
 		stopwatch.reset();
-		console.log(entries.size());
-		console.log(entries.all());
-		console.log(dateGroup.all());
         $("#weight-input").val("");
         $("#reps-input").val("");
         $("#warmup-input").val("");
@@ -901,11 +887,14 @@ function saveEntry() {
 
 function importSelectedFile() {
 	let fileInput = $("input:file");
-	let file = $fileInput.get(0).files[0];
+	let file = fileInput.get(0).files[0];
 	let reader = new FileReader();
 	reader.onload = e => { 
-		console.log(e.target.result);
-		let data = d3.csv.parse(e.target.result);
+		let data;
+		if (file.type == "text/csv") 
+			data = d3.csv.parse(e.target.result);
+		else if (file.type == "application/json") 
+			data = JSON.parse(e.target.result);
 		importAllEntries(data, 
 			progressUpdater(".replace-on-import")
 				.header("Importing...")
@@ -991,10 +980,51 @@ function dataReady(data) {
 	minDate = moment(d3.min(data, d => d.start)).startOf('day');
 	entries.add(data);
 	dc.renderAll();
-	console.log(entries.size());
-	console.log(entries.all());
-	console.log(dateGroup.all());
 }
+
+function dismissAndShow(event) {
+	let dismissModal = $(event.target.attributes["data-dismiss-target"].value);
+	let targetModal = $(event.target.attributes["data-target"].value);
+	dismissModal
+		.modal("hide")
+		.on("hidden.bs.modal", _ => targetModal.modal("show"));
+}
+
+/*
+Special Case: ios web clip application
+*/
+if (("standalone" in window.navigator) && window.navigator.standalone) {
+	/*
+	We're using a black-translucent status bar in iOS, so leave room in the nav for that.'
+	*/
+	$(".navbar").css("padding-top", "20px");
+	/*
+	Disable overscroll on iOS
+
+	Make it feel slightly more native. iOS will allow overscroll of the entire page body
+	which reveals an unsightly gray area above the nav bar.
+	*/
+	$("div.scrollable")
+		.css("padding-top", "50px")
+		.css("position", "absolute")
+		.css("overflow", "auto")
+		.css("-webkit-overflow-scrolling", "touch")
+		.css("top", "0")
+		.css("left", "0")
+		.css("bottom", "0")
+		.css("right", "0");
+} else {
+	iNoBounce.disable();
+}
+
+/*
+Disable 300ms click delay on mobile
+
+This screws up tool tips on charts on mobile
+*/
+// $(function() {
+//     FastClick.attach(document.body);
+// });
 
 let windowWidth = window.innerWidth;
 let daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -1013,12 +1043,12 @@ let colorScales = {
     intensity: d3
         .scale
         .threshold()
-        .domain([0.1, 0.5, 0.8, 1.0])
+        .domain([0.01, 0.5, 0.8, 1.0])
         .range(colors),
     rvolume: d3
         .scale
         .threshold()
-        .domain([0.1, 0.5, 0.8, 1.0])
+        .domain([0.01, 0.5, 0.8, 1.0])
         .range(colors),
     duration: d3
         .scale
@@ -1307,23 +1337,6 @@ window.onresize = function(event) {
     resizeAllCharts();
     dc.renderAll();
 };
-
-function metricChanged(event) {
-	//if (!event.target.checked) return;
-	// let metric = event.target.value;
-	// hack to work around bootstrap not updating radio checked status
-	// this function is called on click of the label instead because onchange wont happen
-	let metric = event.target.firstElementChild.value;
-	updateMetric(metric);
-	dc.redrawAll()
-}
-
-function prFilterChanged(event) {
-	let types = new Set($("input:checkbox[name=pr-filter]:checked")
-		.map(function(){return $(this).val()}).get());
-	prDimension.filter(t => types.size > 0 ? types.has(t) : true);
-	dc.redrawAll();
-}
 
 // http://stackoverflow.com/a/2880929/952123
 var match,

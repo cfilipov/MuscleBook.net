@@ -16,14 +16,6 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 */
-html {
-	background-color: #373a3c;
-}
-html,body {
-    -webkit-overflow-scrolling : touch !important;
-    overflow: auto !important;
-    height: 100% !important;
-}
 .btn-no-outline,
 .btn-no-outline:hover,
 .btn-no-outline:active,
@@ -183,10 +175,10 @@ a.dropdown-item.active:hover {
 
 }*/
 #anatomy-diagram-left {
-	padding: 0;
+	padding: 0 0 0 15px;
 }
 #anatomy-diagram-right {
-	padding: 0;
+	padding: 0 15px 0 0;
 }
 .anatomy-diagram {
 	width: 100%;
@@ -197,8 +189,8 @@ a.dropdown-item.active:hover {
 	margin-right: initial;
 }
 path.muscle.highlight {
-	fill-opacity: .25;
-	/*fill: #5bc0de;*/
+	fill-opacity: .75;
+	fill: #5bc0de;
 }
 .tag.tip {
 	position: absolute;
@@ -295,10 +287,12 @@ div.dc-chart {
 
 /* Extra Small Devices, Phones */ 
 @media only screen and (max-width : 480px) {
+	body {
+		padding-top: 41px;
+	}
 	.container {
 		padding-left: 0;
 		padding-right: 0;
-		padding-top: 40px;
 	}
 	.card {
 		border-radius: 0;
@@ -322,8 +316,8 @@ div.dc-chart {
 }
 /* Everything Else */ 
 @media only screen and (min-width : 480px) {
-	.container {
-		padding-top: 3.5rem; 
+	body {
+		padding-top: 56px; 
 	}
 	div[class^="col-"] {
 		padding-right: 0.375rem;
