@@ -16,6 +16,7 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 .btn-no-outline,
 .btn-no-outline:hover,
 .btn-no-outline:active,
@@ -348,6 +349,7 @@ div.btn-toolbar {
 		border-bottom-right-radius: 0;
 		border-top-right-radius: 0;
 		margin-bottom: -1px !important;
+		margin-top: -1px !important;
 	}
 	.no-border-xs-dn {
 		border: 0;

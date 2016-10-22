@@ -29,8 +29,8 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 	<meta name="author" content="Cristian Filipov">
     <link rel="stylesheet" type="text/css" href="lib/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="lib/dc.css">
+	<link rel="stylesheet" type="text/css" href="lib/ionicons.css">
     <link rel="stylesheet" type="text/css" href="mb/mb.css">
-	<link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css">
 	<link rel="apple-touch-icon" href="Icon512.png" />
 	<link rel="icon" type="image/png" href="Icon512.png" />
 	<title>Muscle Book</title>
@@ -72,29 +72,23 @@ Date Range | Metric | PR Filters
 -->
 <div class="row">
 	<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
-		<div class="col-sm-5">
-				<div class="input-group pad-bottom-sm">
-					<input class="form-control text-xs-center full-bleed-xs-dn no-left-border-xs-dn" type="date" id="start-date-input" style="width: 50%; padding: .25rem .5rem; font-size: .875rem;">
-					<input id="end-date-input" class="form-control text-xs-center no-left-border full-bleed-xs-dn no-right-border-xs-dn" type="date" style="width: 50%;  padding: .25rem .5rem; font-size: .875rem;">
-				</div>
-		</div>
-		<div class="col-sm-5 col-xs-10">
-			<div class="input-group">
-				<select class="form-control custom-select pad-bottom-sm full-bleed-xs-dn no-left-border-xs-dn" style="width: 60%; padding: .25rem .5rem; font-size: .875rem; height: initial;" onchange="metricChanged(event);">
+		<div class="col-xs-10">
+			<div class="input-group pad-bottom-sm">
+				<select class="form-control custom-select full-bleed-xs-dn no-left-border-xs-dn" style="width: 65%; height: 35px;" onchange="metricChanged(event);">
 					<option value="intensity" selected>Intensity</option>
 					<option value="weight">Weight</option>
 					<option value="volume">Volume</option>
-					<option value="activedur">Time (active)</option>
-					<option value="restdur">Time (rest)</option>
-					<option value="combduration">Time (both)</option>
+					<option value="activedur">Duration (active)</option>
+					<option value="restdur">Duration (rest)</option>
+					<option value="combduration">Duration (both)</option>
 					<option value="sets">Sets</option>
 					<option value="xsets">Sets (exercise)</option>
-					<option value="rsets">Sets (reps+w)</option>
+					<option value="rsets">Sets (reps+weight)</option>
 					<option value="reps">Reps</option>
 					<option value="workouts">Workouts</option>
 					<option value="exercises">Exercises</option>
 				</select>
-				<select id="aggregation" class="form-control custom-select no-left-border pad-bottom-sm full-bleed-xs-dn" style="width: 40%; padding: .25rem .5rem; font-size: .875rem; height: initial;" onchange="aggregationChanged(event);">
+				<select id="aggregation" class="form-control custom-select no-left-border full-bleed-xs-dn no-right-border-xs-dn" style="width: 35%; height: 35px;" onchange="aggregationChanged(event);">
 					<option value="max" selected>Max</option>
 					<option value="avg">Avg.</option>
 					<option value="count">Count</option>
@@ -103,8 +97,8 @@ Date Range | Metric | PR Filters
 			</div>
 		</div>
 		<div class="col-xs-2">
-			<div class="dropdown pull-xs-right pad-bottom-sm full-bleed-xs-dn">
-				<button class="btn btn-secondary btn-sm dropdown-toggle no-border-xs-dn" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			<div class="dropdown pad-bottom-sm pull-xs-right">
+				<button class="btn btn-secondary btn-sm dropdown-toggle full-bleed-xs-dn no-right-border-xs-dn" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height: 35px; border: 1px solid #dfdfdf;">
 				PR
 				</button>
 				<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton" style="opacity: 0.9;">
@@ -160,19 +154,33 @@ Timeline chart
 				<div class="card-header">
 					<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
 						<div class="btn-group btn-group-xs" role="group" aria-label="Second group">
-							<a href="javascript:timeChart.panLeft();" class="btn btn-secondary">&lt;</a>
-							<a href="javascript:timeChart.panRight();" class="btn btn-secondary">&gt;</a>
+							<a href="javascript:timeChart.panLeft();" class="btn btn-secondary">
+								<i class="icon ion-ios-arrow-left"></i>
+							</a>
+							<a href="javascript:timeChart.panRight();" class="btn btn-secondary">
+								<i class="icon ion-ios-arrow-right"></i>
+							</a>
 						</div>
 						<div class="btn-group btn-group-xs" role="group" aria-label="First group">
-							<a href="javascript:timeChart.zoomOut();" class="btn btn-secondary">-</a>
-							<a href="javascript:timeChart.zoomIn();" class="btn btn-secondary">+</a>
+							<a href="javascript:timeChart.zoomOut();" class="btn btn-secondary">
+								<i class="icon ion-ios-minus-empty"></i>
+							</a>
+							<a href="javascript:timeChart.zoomIn();" class="btn btn-secondary">
+								<i class="icon ion-ios-plus-empty"></i>
+							</a>
 						</div>
-						<button id="reset-date-range" class="btn btn-secondary btn-xs btn-outline-danger pull-xs-right" type="button" style="display: none;" onclick="resetDateRangeFilter();">
-							<i class="fa fa-undo" aria-hidden="true"></i>
-						</button>
+						<a id="reset-date-range" class="pull-xs-right" style="display: none; font-size: 18px; color: #d9534f;" href="javascript:resetDateRangeFilter();">
+							<i class="icon ion-ios-refresh"></i>
+						</a>
 					</div>
 				</div>
 				<div id="time-chart"></div>
+				<div class="card-footer" style="padding: 0px;">
+					<div class="input-group" style="width: 100%;">
+						<input class="form-control text-xs-center full-bleed-xs-dn no-left-border-xs-dn" type="date" required="required" id="start-date-input" style="width: 50%; height: 100%; border-top-left-radius: 0; margin-top: -1px; margin-bottom: -1px; border: 1px solid #dfdfdf; border-left: 0;">
+						<input id="end-date-input" class="form-control text-xs-center no-left-border full-bleed-xs-dn" required="required" type="date" style="width: 50%; height: 100%; border-top-right-radius: 0; border-top-right-radius: 0; margin-top: -1px; margin-bottom: -1px; border: 1px solid #dfdfdf; border-right: 0;">
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -190,7 +198,7 @@ Muscles | Exercises
 						<div class="btn-group btn-group-xs" role="group" aria-label="Second group">
 							<div class="dropdown" style="opacity:1.0;">
 								<button class="btn btn-xs btn-secondary dropdown-toggle nocaret" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >
-									<i class="fa fa-filter" aria-hidden="true"></i>
+									<i class="icon ion-ios-settings"></i>
 								</button>
 								<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="width: 220px !important; opacity: 0.9;">
 									<div class="list-group">
@@ -223,9 +231,9 @@ Muscles | Exercises
 							</div>
 						</div>
 						<div class="btn-group btn-group-xs pull-xs-right" role="group" aria-label="Second group">
-							<button id="reset-muscle" class="reset btn btn-secondary btn-outline-danger" type="button" style="display: none;" onclick="muscleBarChart.filterAll();dc.redrawAll();">
-								<i class="fa fa-undo" aria-hidden="true"></i>
-							</button>
+							<a id="reset-muscle" style="display: none; font-size: 18px; color: #d9534f;" href="javascript:muscleBarChart.filterAll();dc.redrawAll();">
+								<i class="icon ion-ios-refresh"></i>
+							</a>
 						</div>
 					</div>
 				</div>
@@ -240,18 +248,18 @@ Muscles | Exercises
 		<div class="col-sm-6">
 			<div id="day-of-week-chart" class="card no-axis">
 				<div class="card-header" style="height: 41px;">
-					<button class="reset btn btn-secondary btn-xs btn-outline-danger pull-xs-right" type="button" style="display: none;" onclick="dayOfWeekChart.filterAll();dc.redrawAll();">
-						<i class="fa fa-undo" aria-hidden="true"></i>
-					</button>
+					<a style="display: none; font-size: 18px; color: #d9534f;" class="reset pull-xs-right" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();">
+						<i class="icon ion-ios-refresh"></i>
+					</a>
 				</div>
 			</div>
 		</div>
 		<div class="col-sm-6">
 			<div id="exercise-chart" class="card no-axis">
 				<div class="card-header" style="height: 41px;">
-					<button class="reset btn btn-secondary btn-xs btn-outline-danger pull-xs-right" type="button" style="display: none;" onclick="exerciseChart.filterAll();dc.redrawAll();">
-						<i class="fa fa-undo" aria-hidden="true"></i>
-					</button>
+					<a style="display: none; font-size: 18px; color: #d9534f;" class="reset pull-xs-right" href="javascript:exerciseChart.filterAll();dc.redrawAll();">
+						<i class="icon ion-ios-refresh"></i>
+					</a>
 				</div>
 			</div>
 		</div>

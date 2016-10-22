@@ -1172,7 +1172,7 @@ let curMetric = "intensity";
 let curAggregation = "max";
 let minDate = null;
 const stopwatch = new Stopwatch();
-const scaleStack = [];
+let scaleStack = [];
 
 function updateColorScales() {
 	let muscleColorScale = extentColorScale(muscleGroup);
@@ -1250,11 +1250,11 @@ timeChart._disableMouseZoom = function() {};
 
 const muscleBarChart = dc.rowChart("#muscle-bar-chart")
     .valueAccessor(valueAccessor)
-    .height(260)
+    .height(310)
     .margins({top: 0, left: 15, right: 15, bottom: 8})
     .group(muscleGroup)
     .dimension(muscleDimension)
-    .cap(11)
+    .cap(14)
     .gap(1)
     .othersGrouper(false)
 	.renderTitleLabel(true)
