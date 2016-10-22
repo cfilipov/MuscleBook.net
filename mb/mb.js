@@ -1130,7 +1130,7 @@ if (("standalone" in window.navigator) && window.navigator.standalone) {
 	which reveals an unsightly gray area above the nav bar.
 	*/
 	$("div.scrollable")
-		.css("padding-top", "50px")
+		.css("padding-top", "54px")
 		.css("position", "absolute")
 		.css("overflow", "auto")
 		.css("-webkit-overflow-scrolling", "touch")

@@ -88,7 +88,7 @@ Date Range | Metric | PR Filters
 					<option value="workouts">Workouts</option>
 					<option value="exercises">Exercises</option>
 				</select>
-				<select id="aggregation" class="form-control custom-select no-left-border full-bleed-xs-dn no-right-border-xs-dn" style="width: 35%; height: 35px;" onchange="aggregationChanged(event);">
+				<select id="aggregation" class="form-control custom-select no-left-border full-bleed-xs-dn" style="width: 35%; height: 35px;" onchange="aggregationChanged(event);">
 					<option value="max" selected>Max</option>
 					<option value="avg">Avg.</option>
 					<option value="count">Count</option>
@@ -97,8 +97,8 @@ Date Range | Metric | PR Filters
 			</div>
 		</div>
 		<div class="col-xs-2">
-			<div class="dropdown pad-bottom-sm pull-xs-right">
-				<button class="btn btn-secondary btn-sm dropdown-toggle full-bleed-xs-dn no-right-border-xs-dn" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height: 35px; border: 1px solid #dfdfdf;">
+			<div class="dropdown pad-bottom-sm pull-xs-right full-width-xs-dn">
+				<button class="btn btn-secondary btn-sm dropdown-toggle full-bleed-xs-dn no-right-border-xs-dn no-left-border-xs-dn text-xs-right full-width-xs-dn" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height: 35px; border: 1px solid #dfdfdf;">
 				PR
 				</button>
 				<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton" style="opacity: 0.9;">
@@ -177,8 +177,8 @@ Timeline chart
 				<div id="time-chart"></div>
 				<div class="card-footer" style="padding: 0px;">
 					<div class="input-group" style="width: 100%;">
-						<input class="form-control text-xs-center full-bleed-xs-dn no-left-border-xs-dn" type="date" required="required" id="start-date-input" style="width: 50%; height: 100%; border-top-left-radius: 0; margin-top: -1px; margin-bottom: -1px; border: 1px solid #dfdfdf; border-left: 0;">
-						<input id="end-date-input" class="form-control text-xs-center no-left-border full-bleed-xs-dn" required="required" type="date" style="width: 50%; height: 100%; border-top-right-radius: 0; border-top-right-radius: 0; margin-top: -1px; margin-bottom: -1px; border: 1px solid #dfdfdf; border-right: 0;">
+						<input class="form-control text-xs-center full-bleed-xs-dn no-left-border-xs-dn" type="date" required="true" id="start-date-input" style="width: 50%; height: 100%; border-top-left-radius: 0; margin-top: -1px; margin-bottom: -1px; border: 1px solid #dfdfdf; border-left: 0;">
+						<input id="end-date-input" class="form-control text-xs-center no-left-border full-bleed-xs-dn" required="true" type="date" style="width: 50%; height: 100%; border-top-right-radius: 0; border-top-right-radius: 0; margin-top: -1px; margin-bottom: -1px; border: 1px solid #dfdfdf; border-right: 0;">
 					</div>
 				</div>
 			</div>

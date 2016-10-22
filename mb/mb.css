@@ -351,6 +351,9 @@ div.btn-toolbar {
 		margin-bottom: -1px !important;
 		margin-top: -1px !important;
 	}
+	.full-width-xs-dn {
+		width: 100%;
+	}
 	.no-border-xs-dn {
 		border: 0;
 	}
