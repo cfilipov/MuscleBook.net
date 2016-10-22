@@ -169,12 +169,19 @@ Timeline chart
 								<i class="icon ion-ios-plus-empty"></i>
 							</a>
 						</div>
+						<div class="btn-group btn-group-xs" role="group" aria-label="First group">
+							<button type="button" class="btn btn-secondary active" data-toggle="button" aria-pressed="true" autocomplete="off" onclick="toggleBrush(event);">
+								<i class="icon ion-ios-barcode-outline"></i>
+							</button>
+						</div>
 						<a id="reset-date-range" class="pull-xs-right" style="display: none; font-size: 18px; color: #d9534f;" href="javascript:resetDateRangeFilter();">
 							<i class="icon ion-ios-refresh"></i>
 						</a>
 					</div>
 				</div>
-				<div id="time-chart"></div>
+				<div id="time-chart" style="position:relative;">
+					<span id="time-chart-tip" class="tag tag-info tip" hidden="true"></span>
+				</div>
 				<div class="card-footer" style="padding: 0px;">
 					<div class="input-group" style="width: 100%;">
 						<input class="form-control text-xs-center full-bleed-xs-dn no-left-border-xs-dn" type="date" required="true" id="start-date-input" style="width: 50%; height: 100%; border-top-left-radius: 0; margin-top: -1px; margin-bottom: -1px; border: 1px solid #dfdfdf; border-left: 0;">
@@ -237,7 +244,7 @@ Muscles | Exercises
 						</div>
 					</div>
 				</div>
-				<div class="card-block row anatomy">
+				<div class="card-block row anatomy" style="position:relative;">
 					<div id="anatomy-diagram-left" class="col-xs-6"></div>
 					<div id="anatomy-diagram-right" class="col-xs-6"></div>
 					<span id="anatomy-tip" class="tag tag-info tip" hidden="true"></span>

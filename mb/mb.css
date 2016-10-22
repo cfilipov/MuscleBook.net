@@ -173,11 +173,11 @@ a.dropdown-item.active:hover {
 	padding: .55rem .75rem;
 }
 .dc-chart g.row text {
-	fill: #eee;
+	fill: #373a3c;
 	/*stroke: #fbb;*/
 }
 .dc-chart rect.deselected {
-	fill: #f5f5f5;
+	fill: #f1f1f1;
 }
 /*.dc-chart rect.selected {
 
@@ -197,8 +197,8 @@ a.dropdown-item.active:hover {
 	margin-right: initial;
 }
 path.muscle.highlight {
-	fill-opacity: .75;
-	fill: #5bc0de;
+	fill-opacity: .5;
+	/*fill: #5bc0de;*/
 }
 .tag.tip {
 	position: absolute;
@@ -235,12 +235,9 @@ path.muscle.highlight {
     visibility: hidden;
 }*/
 
-.no-axis.dc-chart .axis path, 
-.no-axis.dc-chart .axis line,
-.no-axis.dc-chart .axis text, 
-.no-axis.dc-chart .axis .grid-line {
+/*.no-axis.dc-chart .axis text {
     visibility: hidden;
-}
+}*/
 
 .dc-chart .axis path, 
 .dc-chart .axis line,

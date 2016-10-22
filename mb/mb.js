@@ -184,21 +184,29 @@ function metricAggregate(metric) {
     }
 }
 
-function metricFormat(value) {
-    switch(curMetric) {
+function metricFormat() {
+	const metric = arguments.length == 2 ? arguments[0] : curMetric;
+	const value = arguments.length == 2 ? arguments[1] : arguments[0];
+    switch(metric) {
         case "intensity": return `${(value * 100).toFixed(2)}%`;
 		case "weight": return `${value.toLocaleString()} lbs`;
         case "volume": return `${value.toLocaleString()} lbs`;
         case "activedur": return formatDuration(value);
 		case "restdur": return formatDuration(value);
 		case "combdur": return formatDuration(value);
-		case "sets": return `${value} sets`;
-		case "xsets": return `${value} sets`;
-		case "rsets": return `${value} sets`;
-		case "reps": return `${value} reps`;
+		case "sets": return `${Math.max(1, value.toFixed(0))} sets`;
+		case "xsets": return `${Math.max(1, value.toFixed(0))} sets`;
+		case "rsets": return `${Math.max(1, value.toFixed(0))} sets`;
+		case "reps": return `${Math.max(1, value.toFixed(0))} reps`;
 		case "workouts": return `${value} workouts`;
 		case "exercises": return `${value} exercises`;
     }
+}
+
+function toggleBrush(event) {
+	const active = !event.currentTarget.classList.contains("active");
+	timeChart.brushOn(active);
+	timeChart.render();
 }
 
 function metricReducer(group) {
@@ -767,9 +775,14 @@ function updateDateRange(range) {
     onAnyFilterChange();
 }
 
-function valueAccessor(d) {
+function curMetricValueAccessor(d) {
     if (!d.value) { return 0; }
     return d.value[curMetric][curAggregation] || 0;
+}
+
+function metricValueAccessor(metric, d) {
+    if (!d.value) { return 0; }
+    return d.value[metric][curAggregation] || 0;
 }
 
 function exportJSON() {
@@ -827,7 +840,11 @@ function formatDuration(d) {
 
 function titleForCurMetric(m,d) {
     if (!d.value) { return m; }
-    let value = valueAccessor(d);
+    let value = curMetricValueAccessor(d);
+	if (curMetric === "intensity") {
+		let weightValue = metricValueAccessor("weight", d);
+		return `${m}<br/>${metricFormat(value)} (${metricFormat("weight", weightValue)})`;
+	}
 	return `${m}<br/>${metricFormat(value)}`;
 }
 
@@ -1069,18 +1086,17 @@ function dismissAndShow(event) {
 }
 
 function extentColorScale(group) {
-	let colors = colorbrewer.OrRd[5];
-	colors[0] = "#f5f5f5";
-	let extent = d3.extent(group.all(), d => valueAccessor(d) || null);
+	let colors = ["#f1f1f1"].concat(colorbrewer.YlOrRd[9].slice(2, 7));
+	let extent = d3.extent(group.all(), d => curMetricValueAccessor(d) || null);
 	extent[0] = Math.max(0.01, extent[0]);
-	extent[1] = Math.max(1, extent[1]);
+	extent[1] = Math.max(1.0, extent[1]);
 	if (extent[0] == extent[1]) extent[0] = extent[1]/2.0;
-	let range = d3.range(extent[0], extent[1], ((extent[1]-extent[0])/4));
+	let range = d3.range(extent[0], extent[1], (Math.ceil(extent[1]-extent[0])/5));
 	switch(curMetric) {
         case "intensity":  return d3
 			.scale
 			.threshold()
-			.domain([0.01, 0.5, 0.8, 1.0])
+			.domain([0.01, 0.7, 0.8, 1.0, 1.0001])
 			.range(colors);
 		case "xsets": return d3
 			.scale
@@ -1091,7 +1107,7 @@ function extentColorScale(group) {
 			if (curAggregation === "max") return d3
 				.scale
 				.threshold()
-				.domain([1, 5, 10, 12])
+				.domain([1, 5, 8, 10, 12])
 				.range(colors);
 			else return d3
 				.scale
@@ -1102,7 +1118,7 @@ function extentColorScale(group) {
 			if (curAggregation === "max") return d3
 				.scale
 				.threshold()
-				.domain([1, 5, 10, 12])
+				.domain([1, 5, 8, 10, 12])
 				.range(colors);
 			else return d3
 				.scale
@@ -1178,7 +1194,10 @@ function updateColorScales() {
 	let muscleColorScale = extentColorScale(muscleGroup);
 	anteriorDiagram.colors(muscleColorScale);
 	posteriorDiagram.colors(muscleColorScale)
+	// muscleBarChart.colors(muscleColorScale);
 	workoutCalendar.colors(extentColorScale(dateGroup));
+	// dayOfWeekChart.colors(extentColorScale(dayOfWeekGroup));
+	//exerciseChart.colors(extentColorScale(excerciseGroup));
 }
 
 const entries = crossfilter([]);
@@ -1212,7 +1231,7 @@ const allEntriesGroup = entries.groupAll();
 statsReducer(allEntriesGroup);
 
 const workoutCalendar = dc.calendarGraph("#cal-graph")
-    .valueAccessor(valueAccessor)
+    .valueAccessor(curMetricValueAccessor)
     .margins({top: 30, right: 0, bottom: 20, left: 25})
     .group(dateGroup)
     .dimension(dateDimension)
@@ -1222,7 +1241,7 @@ const workoutCalendar = dc.calendarGraph("#cal-graph")
 //const yExtent = d3.extent(dateGroup.all(), d => d.value.value === 0 ? null : d.value.value);
 
 const timeChart = dc.barChart("#time-chart")
-    .valueAccessor(valueAccessor)
+    .valueAccessor(curMetricValueAccessor)
     .height(130)
     .gap(1)
     .transitionDuration(1000)
@@ -1237,8 +1256,23 @@ const timeChart = dc.barChart("#time-chart")
     .elasticY(true)
     .renderHorizontalGridLines(true)
     .turnOffControls()
+	.title(d => titleForCurMetric(moment(d.key).format("ddd, MMM D, YYYY"), d))
     .on("filtered", (chart, filter) => {
         updateDateRange(filter);
+    })
+	.on('renderlet', chart => {
+		chart.svg()
+			.selectAll("rect.bar")
+            .on("mouseover", function (d) {
+                d3.select("#time-chart-tip")
+                    .attr("hidden", null)
+                    .html(chart.title()(d.data));
+            })
+            .on("mouseout", function (d) {
+                d3.select("#time-chart-tip")
+                    .attr("hidden", "true")
+                    .text(null);
+            });
     });
 
 let rangeStart = moment(today).subtract(1, "week");
@@ -1249,17 +1283,18 @@ timeChart.yAxis().ticks(3, ",.1s");
 timeChart._disableMouseZoom = function() {};
 
 const muscleBarChart = dc.rowChart("#muscle-bar-chart")
-    .valueAccessor(valueAccessor)
-    .height(310)
-    .margins({top: 0, left: 15, right: 15, bottom: 8})
+    .valueAccessor(curMetricValueAccessor)
+    .height(360)
+    .margins({top: 0, left: 15, right: 15, bottom: 25})
     .group(muscleGroup)
     .dimension(muscleDimension)
-    .cap(14)
-    .gap(1)
+    .cap(12)
+    .gap(5)
     .othersGrouper(false)
 	.renderTitleLabel(true)
-    .ordering(d => -d.value.value)
-    .ordinalColors(colorbrewer.Reds[3].slice(-1))
+    .ordering(d => -curMetricValueAccessor(d))
+    //.ordinalColors(colorbrewer.Reds[9].slice(1, 7).reverse())
+	.ordinalColors(colorbrewer.Set3[9])
     .label(d => {
         var ex = muscleLookup[d.key]; 
         if (ex != null) {
@@ -1267,40 +1302,42 @@ const muscleBarChart = dc.rowChart("#muscle-bar-chart")
         }
         return d.key
     })
-    .title(d => valueAccessor(d).toFixed(2))
+    .title(d => curMetricValueAccessor(d).toFixed(2))
     .elasticX(true)
     .on("filtered", onAnyFilterChange);
 
-muscleBarChart.xAxis().ticks(1);
+muscleBarChart.xAxis().ticks(5);
 
 const dayOfWeekChart = dc.rowChart("#day-of-week-chart")
-    .valueAccessor(valueAccessor)
-    .height(200)
-    .margins({top: 15, left: 15, right: 15, bottom: 10})
+    .valueAccessor(curMetricValueAccessor)
+    .height(240)
+    .margins({top: 15, left: 15, right: 15, bottom: 25})
     .group(dayOfWeekGroup)
-    .gap(1)
+    .gap(5)
     .dimension(dayOfWeek)
-    .ordinalColors(colorbrewer.Reds[3].slice(-1))
+    // .ordinalColors(colorbrewer.Reds[9].slice(1, 7).reverse())
+	.ordinalColors(colorbrewer.Set3[9])
     .label( d => d.key.split('.')[1] )
-    .title(d => valueAccessor(d).toFixed(2))
+    .title(d => curMetricValueAccessor(d).toFixed(2))
     .elasticX(true)
 	.renderTitleLabel(true)
     .on("filtered", onAnyFilterChange);
 
-dayOfWeekChart.xAxis().ticks(1);
+dayOfWeekChart.xAxis().ticks(5);
 
 const exerciseChart =  dc.rowChart("#exercise-chart")
-    .valueAccessor(valueAccessor)
+    .valueAccessor(curMetricValueAccessor)
     .height(260)
-    .margins({top: 15, left: 15, right: 15, bottom: 10})
+    .margins({top: 15, left: 15, right: 15, bottom: 25})
     .group(excerciseGroup)
     .dimension(excerciseDimension)
-    .cap(10)
-    .gap(1)
+    .cap(8)
+    .gap(5)
     .othersGrouper(false)
 	.renderTitleLabel(true)
     .ordering(function(d){return -d.value.value;})
-    .ordinalColors(colorbrewer.Reds[3].slice(-1))
+    // .ordinalColors(colorbrewer.Reds[9].slice(1, 7).reverse())
+	.ordinalColors(colorbrewer.Set3[9])
     .label(function (d) {
         var ex = exerciseLookup[d.key]; 
         if (ex != null) {
@@ -1308,15 +1345,15 @@ const exerciseChart =  dc.rowChart("#exercise-chart")
         }
         return d.key
     })
-    .title(d => valueAccessor(d).toFixed(2))
+    .title(d => curMetricValueAccessor(d).toFixed(2))
     .elasticX(true)
     .on("filtered", onAnyFilterChange);
 
-exerciseChart.xAxis().ticks(1);
+exerciseChart.xAxis().ticks(5);
 
 const anteriorDiagram = dc.anatomyDiagram("#anatomy-diagram-left")
     .anterior()
-    .valueAccessor(valueAccessor)
+    .valueAccessor(curMetricValueAccessor)
     .group(muscleGroup)
     .dimension(muscleDimension)
     .title(d => titleForCurMetric(muscleLookup[d.key].name, d))
@@ -1325,7 +1362,7 @@ const anteriorDiagram = dc.anatomyDiagram("#anatomy-diagram-left")
 
 const posteriorDiagram = dc.anatomyDiagram("#anatomy-diagram-right")
     .posterior()
-    .valueAccessor(valueAccessor)
+    .valueAccessor(curMetricValueAccessor)
     .group(muscleGroup)
     .dimension(muscleDimension)
     .title(d => titleForCurMetric(muscleLookup[d.key].name, d))
