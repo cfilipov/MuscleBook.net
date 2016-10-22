@@ -30,6 +30,7 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
     <link rel="stylesheet" type="text/css" href="lib/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="lib/dc.css">
     <link rel="stylesheet" type="text/css" href="mb/mb.css">
+	<link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css">
 	<link rel="apple-touch-icon" href="Icon512.png" />
 	<link rel="icon" type="image/png" href="Icon512.png" />
 	<title>Muscle Book</title>
@@ -48,7 +49,7 @@ Navigation
 			<button type="button" class="dropdown-item demo-hidden" data-backdrop="static" onclick="exportJSON();" download>Export</button>
 			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#about-modal">About</button>
 			<div class="dropdown-divider"></div>
-			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#debug-options-modal">Debug</button>
+			<button type="button" class="dropdown-item" data-toggle="modal" data-backdrop="static" data-target="#debug-options-modal">Debug</button>
       </div>
     </li>
   </ul>
@@ -66,208 +67,200 @@ Main content
 -->
 <div class="scrollable">
 <div class="container">
+<!--
+Date Range | Metric | PR Filters
+-->
 <div class="row">
-<!-- 
+	<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
+		<div class="col-sm-5">
+				<div class="input-group pad-bottom-sm">
+					<input class="form-control text-xs-center full-bleed-xs-dn no-left-border-xs-dn" type="date" id="start-date-input" style="width: 50%; padding: .25rem .5rem; font-size: .875rem;">
+					<input id="end-date-input" class="form-control text-xs-center no-left-border full-bleed-xs-dn no-right-border-xs-dn" type="date" style="width: 50%;  padding: .25rem .5rem; font-size: .875rem;">
+				</div>
+		</div>
+		<div class="col-sm-5 col-xs-10">
+			<div class="input-group">
+				<select class="form-control custom-select pad-bottom-sm full-bleed-xs-dn no-left-border-xs-dn" style="width: 60%; padding: .25rem .5rem; font-size: .875rem; height: initial;" onchange="metricChanged(event);">
+					<option value="intensity" selected>Intensity</option>
+					<option value="weight">Weight</option>
+					<option value="volume">Volume</option>
+					<option value="activedur">Time (active)</option>
+					<option value="restdur">Time (rest)</option>
+					<option value="combduration">Time (both)</option>
+					<option value="sets">Sets</option>
+					<option value="xsets">Sets (exercise)</option>
+					<option value="rsets">Sets (reps+w)</option>
+					<option value="reps">Reps</option>
+					<option value="workouts">Workouts</option>
+					<option value="exercises">Exercises</option>
+				</select>
+				<select id="aggregation" class="form-control custom-select no-left-border pad-bottom-sm full-bleed-xs-dn" style="width: 40%; padding: .25rem .5rem; font-size: .875rem; height: initial;" onchange="aggregationChanged(event);">
+					<option value="max" selected>Max</option>
+					<option value="avg">Avg.</option>
+					<option value="count">Count</option>
+					<option value="sum">Total</option>
+				</select>
+			</div>
+		</div>
+		<div class="col-xs-2">
+			<div class="dropdown pull-xs-right pad-bottom-sm full-bleed-xs-dn">
+				<button class="btn btn-secondary btn-sm dropdown-toggle no-border-xs-dn" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				PR
+				</button>
+				<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton" style="opacity: 0.9;">
+					<div class="list-group">
+						<div class="input-group">
+							<span class="form-control no-left-border no-bottom-border no-top-border">Weight</span>
+							<span class="input-group-addon no-left-border no-top-border">
+								<input type="checkbox" name="pr-filter" value="weight" onclick="prFilterChanged(event);">
+							</span>
+						</div>
+						<div class="input-group">
+							<span class="form-control no-left-border">Volume</span>
+							<span class="input-group-addon no-left-border">
+								<input type="checkbox" name="pr-filter" value="volume" onclick="prFilterChanged(event);">
+							</span>
+						</div>
+						<div class="input-group">
+							<span class="form-control no-left-border">Sets</span>
+							<span class="input-group-addon no-left-border">
+								<input type="checkbox" name="pr-filter" value="sets" onclick="prFilterChanged(event);">
+							</span>
+						</div>
+						<div class="input-group">
+							<span class="form-control no-left-border no-bottom-border">Reps</span>
+							<span class="input-group-addon no-left-border no-bottom-border">
+								<input type="checkbox" name="pr-filter" value="reps" onclick="prFilterChanged(event);">
+							</span>
+						</div>
+						<div class="input-group">
+							<span class="form-control no-left-border no-bottom-border">First</span>
+							<span class="input-group-addon no-left-border no-bottom-border">
+								<input type="checkbox" name="pr-filter" value="first" onclick="prFilterChanged(event);">
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--
 Calendar graph
+Timeline chart
 -->
-<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
-	<div class="col-sm-12">
-		<div class="card">
-			<span id="cal-tip" class="tag tag-info tip" hidden="true"></span>
-			<div id="cal-graph"></div>
-		</div>
-		<div class="card">
-			<div id="time-chart"></div>
-			<div class="btn-group btn-group-xs top-left" role="group" aria-label="Second group">
-				<a href="javascript:timeChart.panLeft();" class="btn btn-secondary">&lt;</a>
-				<a href="javascript:timeChart.panRight();" class="btn btn-secondary">&gt;</a>
+<div class="row">
+	<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
+		<div class="col-sm-12">
+			<div class="card">
+				<span id="cal-tip" class="tag tag-info tip" hidden="true"></span>
+				<div id="cal-graph"></div>
 			</div>
-			<div class="btn-group btn-group-xs top-right" role="group" aria-label="First group">
-				<a href="javascript:timeChart.zoomOut();" class="btn btn-secondary">-</a>
-				<a href="javascript:timeChart.zoomIn();" class="btn btn-secondary">+</a>
-			</div>
-		</div>
-	</div>
-</div>
-<!-- 
-All other charts (below cal graph)
-
-Large: Two columns
-Small: One column
--->
-<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
-<!-- 
-Right column
--->
-<div class="col-sm-6 push-sm-6">
-<!-- 
-Anatomy diagram
--->
-<div class="card">
-	<div class="card-block row anatomy">
-		<div id="anatomy-diagram-left" class="col-xs-6"></div>
-		<div id="anatomy-diagram-right" class="col-xs-6"></div>
-		<span id="anatomy-tip" class="tag tag-info tip" hidden="true"></span>
-	</div>
-	<div class="dropdown top-right" style="opacity:1.0;">
-		<button class="btn btn-secondary btn-xs dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding: 0 .25rem; line-height: 0.8;">
-			<img src="lib/noun_471105_cc.svg" style="width: 25px;">
-		</button>
-		<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-			<div class="list-group">
-				<div class="input-group">
-					<span class="form-control no-left-border no-bottom-border no-top-border">Target</span>
-					<span class="input-group-addon no-left-border no-top-border">
-						<input type="checkbox" checked="checked">
-					</span>
+			<div class="card">
+				<div class="card-header">
+					<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+						<div class="btn-group btn-group-xs" role="group" aria-label="Second group">
+							<a href="javascript:timeChart.panLeft();" class="btn btn-secondary">&lt;</a>
+							<a href="javascript:timeChart.panRight();" class="btn btn-secondary">&gt;</a>
+						</div>
+						<div class="btn-group btn-group-xs" role="group" aria-label="First group">
+							<a href="javascript:timeChart.zoomOut();" class="btn btn-secondary">-</a>
+							<a href="javascript:timeChart.zoomIn();" class="btn btn-secondary">+</a>
+						</div>
+						<button id="reset-date-range" class="btn btn-secondary btn-xs btn-outline-danger pull-xs-right" type="button" style="display: none;" onclick="resetDateRangeFilter();">
+							<i class="fa fa-undo" aria-hidden="true"></i>
+						</button>
+					</div>
 				</div>
-				<div class="input-group">
-					<span class="form-control no-left-border">Synergists</span>
-					<span class="input-group-addon no-left-border">
-						<input type="checkbox"  checked="checked">
-					</span>
-				</div>
-				<div class="input-group">
-					<span class="form-control no-left-border">Stabilizers</span>
-					<span class="input-group-addon no-left-border">
-						<input type="checkbox" checked="checked">
-					</span>
-				</div>
-				<div class="input-group">
-					<span class="form-control no-left-border no-bottom-border">Dynamic Stabilizers</span>
-					<span class="input-group-addon no-left-border no-bottom-border">
-						<input type="checkbox" checked="checked">
-					</span>
-				</div>
+				<div id="time-chart"></div>
 			</div>
 		</div>
 	</div>
 </div>
-<!-- 
-Muscles bar chart
+<!--
+Anatomy | Weekdays
+Muscles | Exercises
 -->
-<div id="muscle-bar-chart" class="card">
-	<div class="card-header">Muscles
-		<a class="reset btn btn-secondary btn-sm no-bottom-pad pull-xs-right" href="javascript:muscleBarChart.filterAll();dc.redrawAll();"
-			style="display: none;">Reset</a>
-	</div>
-</div>
-<!-- 
-Exercises bar chart
--->
-<div id="exercise-chart" class="card">
-	<div class="card-header">Exercise
-		<a class="reset btn btn-secondary btn-sm no-bottom-pad pull-xs-right" href="javascript:exerciseChart.filterAll();dc.redrawAll();"
-			style="display: none;">Reset</a>
-	</div>
-</div>
-<!-- 
-Day of week bar chart
--->
-<div id="day-of-week-chart" class="card">
-	<div class="card-header">Day of Week
-		<a class="reset btn btn-secondary btn-sm no-bottom-pad pull-xs-right" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();"
-			style="display: none;">Reset</a>
-	</div>
-</div>
-<!-- 
-End of right column
--->
-</div>
-<!-- 
-Left column
--->
-<div class="col-sm-6 pull-sm-6">
-<!-- 
-Metric selection
--->
-<div class="btn-group" data-toggle="buttons" style="width: 100%;">
-  <label class="btn btn-secondary active" style="width: 33.5%;" onclick="metricChanged(event)">
-    <input type="radio" name="metric" value="intensity" autocomplete="off" checked>Intensity
-  </label>
-  <label class="btn btn-secondary" style="width: 33.4%;" onclick="metricChanged(event)">
-    <input type="radio" name="metric" value="rvolume" autocomplete="off">Volume
-  </label>
-  <label class="btn btn-secondary" style="width: 33.5%;" onclick="metricChanged(event)">
-    <input type="radio" name="metric" value="duration" autocomplete="off">Duration
-  </label>
-</div>
-<!-- 
-Date range input/display
--->
-<div class="card">
-	<div class="card-header">Date Range
-		<a id="reset-date-range" class="reset btn btn-secondary btn-sm no-bottom-pad pull-xs-right" href="javascript:resetDateRangeFilter();"
-			style="display: none;">Reset</a>
-	</div>
-	<div class="list-group">
-		<div class="input-group">
-			<span class="input-group-addon">Start</span>
-			<input class="form-control no-left-border text-xs-right" type="date" id="start-date-input">
+<div class="row">
+	<div class="col-sm-12 col-md-10 col-lg-8 col-xl-6">
+		<div class="col-sm-6">
+			<div class="card">
+				<div class="card-header">
+					<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+						<div class="btn-group btn-group-xs" role="group" aria-label="Second group">
+							<div class="dropdown" style="opacity:1.0;">
+								<button class="btn btn-xs btn-secondary dropdown-toggle nocaret" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >
+									<i class="fa fa-filter" aria-hidden="true"></i>
+								</button>
+								<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="width: 220px !important; opacity: 0.9;">
+									<div class="list-group">
+										<div class="input-group">
+											<span class="form-control no-left-border no-bottom-border no-top-border">Target</span>
+											<span class="input-group-addon no-left-border no-top-border">
+												<input type="checkbox" checked="checked">
+											</span>
+										</div>
+										<div class="input-group">
+											<span class="form-control no-left-border">Synergists</span>
+											<span class="input-group-addon no-left-border">
+												<input type="checkbox"  checked="checked">
+											</span>
+										</div>
+										<div class="input-group">
+											<span class="form-control no-left-border">Stabilizers</span>
+											<span class="input-group-addon no-left-border">
+												<input type="checkbox" checked="checked">
+											</span>
+										</div>
+										<div class="input-group">
+											<span class="form-control no-left-border no-bottom-border">Dynamic Stabilizers</span>
+											<span class="input-group-addon no-left-border no-bottom-border">
+												<input type="checkbox" checked="checked">
+											</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="btn-group btn-group-xs pull-xs-right" role="group" aria-label="Second group">
+							<button id="reset-muscle" class="reset btn btn-secondary btn-outline-danger" type="button" style="display: none;" onclick="muscleBarChart.filterAll();dc.redrawAll();">
+								<i class="fa fa-undo" aria-hidden="true"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="card-block row anatomy">
+					<div id="anatomy-diagram-left" class="col-xs-6"></div>
+					<div id="anatomy-diagram-right" class="col-xs-6"></div>
+					<span id="anatomy-tip" class="tag tag-info tip" hidden="true"></span>
+				</div>
+				<div id="muscle-bar-chart" class="no-axis"></div>
+			</div>
 		</div>
-		<div class="input-group">
-			<span class="input-group-addon">End</span>
-			<input class="form-control no-left-border text-xs-right" type="date" id="end-date-input">
+		<div class="col-sm-6">
+			<div id="day-of-week-chart" class="card no-axis">
+				<div class="card-header" style="height: 41px;">
+					<button class="reset btn btn-secondary btn-xs btn-outline-danger pull-xs-right" type="button" style="display: none;" onclick="dayOfWeekChart.filterAll();dc.redrawAll();">
+						<i class="fa fa-undo" aria-hidden="true"></i>
+					</button>
+				</div>
+			</div>
 		</div>
-	</div>
-</div>
-<!-- 
-PR filter selection
--->
-<div class="card">
-	<div class="card-header">PR Filters</div>
-	<div class="list-group">
-		<div class="input-group">
-			<span class="form-control no-left-border">Weight</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" name="pr-filter" value="weight" onchange="prFilterChanged(event)">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Volume</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" name="pr-filter" value="volume" onchange="prFilterChanged(event)">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Sets</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" name="pr-filter" value="sets" onchange="prFilterChanged(event)">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">Reps</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" name="pr-filter" value="reps" onchange="prFilterChanged(event)">
-			</span>
-		</div>
-		<div class="input-group">
-			<span class="form-control no-left-border">First</span>
-			<span class="input-group-addon no-left-border">
-				<input type="checkbox" name="pr-filter" value="first" onchange="prFilterChanged(event)">
-			</span>
+		<div class="col-sm-6">
+			<div id="exercise-chart" class="card no-axis">
+				<div class="card-header" style="height: 41px;">
+					<button class="reset btn btn-secondary btn-xs btn-outline-danger pull-xs-right" type="button" style="display: none;" onclick="exerciseChart.filterAll();dc.redrawAll();">
+						<i class="fa fa-undo" aria-hidden="true"></i>
+					</button>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
-<!-- 
-Statistics
+<!--
+End scrollable
+End container
 -->
-<div class="card">
-	<div class="card-header">Statistics</div>
-	<ul id="statistics" class="list-group"></ul>
-</div>
-<!-- 
-End of left column
--->
-</div>
-<!-- 
-End of all other charts (below cal graph)
--->
-</div>
-<!-- 
-End of main content
--->
-</div>
 </div>
 </div>
 <!-- 
@@ -286,7 +279,7 @@ Modal: select exercises
 				<ul class="list-group">
 					<li class="list-group-item"><input class="search form-control" placeholder="Search" /></li>
 				</ul>
-				<div id="exercise-list" class="list list-group"></div>
+				<ul id="exercise-list" class="list list-group"></ul>
 			</div>
 			<div class="modal-footer"></div>
 		</div>
@@ -565,10 +558,6 @@ Modal: credits
 					<li class="list-group-item">
 						<span><a href="http://tether.io/">tether</a></span>
 						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span>"<a href="https://thenounproject.com/term/filter/471105">Filter</a>" By KΛPKLΛM, from <a href="http://thenounproject.com/">the Noun Project</a></span>
-						<img src="lib/noun_471105_cc.svg" class="pull-xs-right" style="width: 25px;">
 					</li>
 				</ul>	
 			</div>

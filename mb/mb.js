@@ -46,10 +46,9 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 | xset         |
 | rset         |
 | xvolume      |
-| tvolme       |
 | rvolume      |
-| xduration    |
-| tduration    |
+| restdur      |
+| combdur      |
 | prs          |
 +--------------+
 
@@ -85,11 +84,33 @@ It's important to note:
 			The other sets were at a different rep range and weight.
 		- In other words, the last entry's xset tells you that a deadlift was performed 4 times during this workout so far, 
 			regardless of weight or reps. 
+
+Metrics
+-------
+
+* Workouts are broken down into _sets_ of exercises.
+* Each set is associated with *exactly one* exercise.
+* Each set is performed at one specific _weight_.
+* Each set consists of one or more _reps_ (repetitions) of an exercise at that weight.*
+
+For example, Alice performs a 225lbs deadlift for 5 reps. The repeats this 3 times. Thus, Alice has performed 3 sets of 5 reps at 225lbs, or 3x5@225. After those 3 sets, Alice decides to test her max, so she performs a single set at 275bs, or 1x1@275. In total, Alice performed 4 sets, 3 of them at 225lbs for 5 reps and 1 of them at 275 for a single rep.
+
+So how did Alice do on her workouts? In weight training there are two metrics that matter most: volume and intensity. 
+
+Volume
+
+Volume is just the total weight moved, calculated by multiplying the reps and weight and summing that for all sets. Alice's workout had a volume of 3,650lbs (3x5x225 + 1x1x275 = 3,375 + 275 = 3,650).
+
+Intensity
+
+Intensity is how heavy the lift was compared to past performance. If Alice's best deadlift in the past was 270lbs, then her first three sets had an intensity of 83% (225/270x100). Her final set's intensity was 101.8%. From that point on, when calculating intensity, 101.8% will be used. For example, if Alice lifts 3x5@225 tomorrow, her intensity will be 81%, not 83%. By the way, intensity is not retroactive. When looking back at today, that 3x3@225 is still 83% because intensity is based on the max weight *up to that workout*.
+
+Intensity is easy to understand at the level of individual sets, as we have demonstrated. But what's the intensity of a whole workout? It might be tempting to take the average to intensities of all the sets of a workout, but that would drag down the average from accessory exercises. Even if you filter out accessory and warmup sets, taking the average hides the fact that this workout involved a personal-record breaking lift, so the max intensity is a better measure. This workout thus had an intensity of 101.8%.
 */
 
 let db = null;
 
-let PR = {
+const PR = {
 	WEIGHT :"weight", 
 	VOLUME :"volume", 
 	SETS :"sets", 
@@ -97,7 +118,7 @@ let PR = {
 	FIRST :"first"
 }
 
-let colorPalette = [
+const colorPalette = [
     // Brewer Color Schemes http://www.graphviz.org/doc/info/colors.html
     "#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6", "#e5d8bd",
     "#fddaec", "#8dd3c7", "#bebada", "#fb8072", "#80b1d3", "#fdb462",
@@ -108,69 +129,131 @@ let colorPalette = [
     "#5e4fa2", "#ffffb3"
 ];
 
+const migration = {
+	1: db => {
+		const objectStore = db.createObjectStore("entries", { keyPath: "id", autoIncrement: true });
+		objectStore.createIndex("start", "start", { unique: false });
+		objectStore.createIndex("xid", "xid", { unique: false });
+	}
+}
+
 function loadFromDB() {
-	console.log("Loading DB...");
+	console.log("loading db...");
 
-	let dbOpen = window.indexedDB.open("MuscleBookDatabase", 1);
+	const dbOpen = window.indexedDB.open("MuscleBookDatabase", 1);
 
-	dbOpen.onerror = (event) => {
+	dbOpen.onerror = event => {
 		alert(event.target.errorCode);
 	};
 
-	dbOpen.onsuccess = (event) => {
-		console.log("DB loaded..");
+	dbOpen.onsuccess = event => {
+		console.log("db loaded.");
 		db = event.target.result;
+		db.onversionchange = event => {
+			console.log("db version change.");
+			db.close();
+			alert("A new version of this page is ready. Please reload the page.");
+		};
 		databaseReady();
 	};
 
-	dbOpen.onupgradeneeded = (event) => {
-		console.log("Migrating DB");
+	dbOpen.onupgradeneeded = event => {
+		console.log("migrating db...");
 		db = event.target.result;
-		let objectStore = db.createObjectStore("entries", { keyPath: "id", autoIncrement: true });
-		objectStore.createIndex("start", "start", { unique: false });
-		objectStore.createIndex("xid", "xid", { unique: false });
+		for (let i = event.oldVersion + 1; i <= event.newVersion; i++) {
+			if (!migration[i]) continue;
+			migration[i](db);
+		}
 	};
 }
 
+function metricAggregate(metric) {
+    switch(metric) {
+        case "intensity": return ["max", "avg"];
+		case "weight": return ["max", "avg"];
+        case "volume": return ["max", "avg", "sum"];
+        case "activedur": return ["max", "avg", "sum"];
+		case "restdur": return ["max", "avg", "sum"];
+		case "combdur": return ["max", "avg", "sum"];
+		case "sets": return ["exceptionCount"];
+		case "xsets": return ["max"];
+		case "rsets": return ["max"];
+		case "reps": return ["max", "avg", "sum"];
+		case "workouts": return ["exceptionCount"];
+		case "exercises": return ["exceptionCount"];
+    }
+}
+
+function metricFormat(value) {
+    switch(curMetric) {
+        case "intensity": return `${(value * 100).toFixed(2)}%`;
+		case "weight": return `${value.toLocaleString()} lbs`;
+        case "volume": return `${value.toLocaleString()} lbs`;
+        case "activedur": return formatDuration(value);
+		case "restdur": return formatDuration(value);
+		case "combdur": return formatDuration(value);
+		case "sets": return `${value} sets`;
+		case "xsets": return `${value} sets`;
+		case "rsets": return `${value} sets`;
+		case "reps": return `${value} reps`;
+		case "workouts": return `${value} workouts`;
+		case "exercises": return `${value} exercises`;
+    }
+}
+
 function metricReducer(group) {
-	let reducer = reductio();
+	const reducer = reductio();
 	reducer.value("intensity")
-		.avg(e => e.failure ? 1.0 : Math.max(0.1, e.xcalc.intensity))
 		.filter(e => !e.warmup)
-		.alias({
-			value: d => d.avg || 0,
-			formatted: d => `${(d.value() * 100).toFixed(2)}%`
-		});
+		.max(e => e.xcalc.intensity)
+		.avg(e => e.xcalc.intensity);
 	reducer.value("weight")
-		.avg(e => e.xcalc.netweight)
-		.filter(e => !e.warmup && e.xcalc.intensity > 0.5)
-		.alias({ 
-			value: d => d.avg || 0,
-			formatted: d => `${d.value().toLocaleString()}lbs`
-		});
-	reducer.value("rvolume")
-		.max(e => e.xcalc.rvolume)
-		.alias({
-			value: d => d.max || 0,
-			formatted: d => `${(d.value() * 100).toFixed(2)}%`
-		});
+		.filter(e => jQuery.isNumeric(e.xcalc.netweight))
+		.max(e => e.xcalc.netweight)
+		.avg(e => e.xcalc.netweight);
 	reducer.value("volume")
-		.max(e => e.xcalc.xvolume)
-		.alias({
-			value: d => d.max || 0,
-			formatted: d => `${d.value().toLocaleString()}lbs`
-		});
-	reducer.value("duration")
-		.max(e => e.xcalc.tduration)
-		.alias({
-			value: d => d.max || 0,
-			formatted: d => formatDuration(d.value())
-		});
+		.filter(e => jQuery.isNumeric(e.xcalc.netweight))
+		.max(e => e.xcalc.volume)
+		.avg(e => e.xcalc.volume)
+		.sum(e => e.xcalc.volume);
+	reducer.value("activedur")
+		.filter(e => jQuery.isNumeric(e.duration))
+		.max(e => e.duration)
+		.avg(e => e.duration)
+		.sum(e => e.duration);
+	// reducer.value("restdur")
+	// 	.max(e => e.xcalc.rduration)
+	// 	.avg(e => e.xcalc.rduration)
+	// 	.sum(e => e.xcalc.rduration);
+	// reducer.value("combdur")
+	// 	.max(e => e.duration + e.xcalc.rduration)
+	// 	.avg(e => e.duration + e.xcalc.rduration)
+	// 	.sum(e => e.duration + e.xcalc.rduration);
+	reducer.value("sets")
+		.exception(e => e.id)
+		.exceptionCount(true);
+	reducer.value("xsets")
+		.filter(e => jQuery.isNumeric(e.xcalc.xset))
+		.max(e => e.xcalc.xset);
+	reducer.value("rsets")
+		.filter(e => jQuery.isNumeric(e.xcalc.rset))
+		.max(e => e.xcalc.rset);
+	reducer.value("reps")
+		.filter(e => jQuery.isNumeric(e.reps))
+		.max(e => e.reps)
+		.avg(e => e.reps)
+		.sum(e => e.reps);
+	reducer.value("workouts")
+		.exception(e => e.workout)
+		.exceptionCount(true);
+	reducer.value("exercises")
+		.exception(e => e.xid)
+		.exceptionCount(true);
 	reducer(group);
 }
 
 function statsReducer(group) {
-	let reducer = reductio();
+	const reducer = reductio();
 	reducer.value("exercises")
 		.exception(d => d.xid)
 		.exceptionCount(true);
@@ -193,21 +276,21 @@ if (!window.indexedDB) {
 
 function memoize(func) {
 	var memo = {};
-	var slice = Array.prototype.slice;
-	let f = function() {
+	const slice = Array.prototype.slice;
+	const f = function() {
 		var args = slice.call(arguments);
 		if (args in memo) return memo[args];
 		else return (memo[args] = func.apply(this, args));
 	}
-	f.reset = function() {
+	f.reset = () => {
 		memo = {};
 	}
 	return f;
 }
 
 function getAllEntries(onCompleted) {
-	let results = [];
-	let objectStore = db.transaction(["entries"]).objectStore("entries");
+	const results = [];
+	const objectStore = db.transaction(["entries"]).objectStore("entries");
 	objectStore.openCursor().onsuccess = function(event) {
 		let cursor = event.target.result;
 		if (cursor) {
@@ -225,7 +308,7 @@ function calculateVolume(d) {
 }
 
 function calculateNetWeight(d) {
-	var total = 0;
+	let total = 0;
 	if (jQuery.isNumeric(d.weight)) total += d.weight;
 	if (jQuery.isNumeric(d.bodyweight)) total += d.bodyweight;
 	if (jQuery.isNumeric(d.asweight)) total -= d.asweight;
@@ -233,11 +316,11 @@ function calculateNetWeight(d) {
 }
 
 function calculateE1RM(reps, weight) {
-	if (reps < 0) { throw new Error("invalid reps: %s", reps); }
-	if (reps === 0) { return 0; }
-    if (reps == 1) { return weight; }
-    if (reps < 10) { return Math.round(weight / (1.0278 - 0.0278 * reps)); }
-    else { return Math.round(weight / 0.75); }
+	if (reps < 0) throw new Error("invalid reps: %s", reps);
+	if (reps === 0) return 0;
+    if (reps == 1) return weight;
+    if (reps < 10) return Math.round(weight / (1.0278 - 0.0278 * reps));
+    else return Math.round(weight / 0.75);
 }
 
 function calculateEntry(entry) {
@@ -249,25 +332,20 @@ function calculateEntry(entry) {
 function fillEntry(entry, entries) {
 	entry.xcalc = {};
 	calculateEntry(entry);
-
-	let exercise = exerciseLookup[entry.xid];
+	const exercise = exerciseLookup[entry.xid];
 	entry.xcalc.muscles = exercise != null 
 		? displayableMuscleComponents(exercise.muscles).map(m => m.fmaID)
 		: [];
-
-	let stats = getEntryStats(entry, entries);
+	const stats = getEntryStats(entry, entries);
 
 	if (!entry.workout) {
-		let nextWorkoutCutoff = stats.prevEntry.value
+		const nextWorkoutCutoff = stats.prevEntry.value
 			? moment(stats.prevEntry.value).add(1, "hours")
 			: moment();
-		
-		let isNewWorkout = !moment(entry.start).isBefore(nextWorkoutCutoff)
-
-		let prevWorkoutID = stats.prevEntry.value
+		const isNewWorkout = !moment(entry.start).isBefore(nextWorkoutCutoff);
+		const prevWorkoutID = stats.prevEntry.value
 			? stats.prevEntry.entry.workout
 			: 0;
-
 		entry.workout = isNewWorkout
 			? prevWorkoutID + 1
 			: prevWorkoutID;
@@ -309,10 +387,10 @@ function fillEntry(entry, entries) {
 
 	// Update Personal Records
 	entry.xcalc.prs = [];
-	if (entry.xcalc.netweight > stats.weightMax.value) { entry.xcalc.prs.push(PR.WEIGHT); }
-	if (entry.reps > stats.repsMax.value) { entry.xcalc.prs.push(PR.REPS); }
-	if (entry.xcalc.xvolume > stats.xvolumeMax.value) { entry.xcalc.prs.push(PR.VOLUME); }
-	if (entry.xcalc.rset > stats.rsetMax.value) { entry.xcalc.prs.push(PR.SETS); }
+	if (entry.xcalc.netweight > stats.weightMax.value) entry.xcalc.prs.push(PR.WEIGHT);
+	if (entry.reps > stats.repsMax.value) entry.xcalc.prs.push(PR.REPS);
+	if (entry.xcalc.xvolume > stats.xvolumeMax.value) entry.xcalc.prs.push(PR.VOLUME);
+	if (entry.xcalc.rset > stats.rsetMax.value) entry.xcalc.prs.push(PR.SETS);
 
 	/* 
 	Sanity checks
@@ -324,19 +402,11 @@ function fillEntry(entry, entries) {
 		console.assert(jQuery.isNumeric(entry.xcalc.tduration) && entry.duration >= 0, 
 			`Invalid tduration: ${JSON.stringify(entry)}`);
 	}
-	console.assert(jQuery.isNumeric(entry.weight) && entry.weight >= 0, 
-		`Invalid weight: ${JSON.stringify(entry)}`);
-	console.assert(jQuery.isNumeric(entry.xcalc.netweight) && entry.xcalc.netweight >= 0, 
-		`Invalid netweight: ${JSON.stringify(entry)}`);
-	console.assert(Number.isInteger(entry.xcalc.xset), 
-		`Invalid xset: ${JSON.stringify(entry)}`);
-	console.assert(Number.isInteger(entry.xcalc.rset), 
-		`Invalid rset: ${JSON.stringify(entry)}`);
 }
 
 function getEntryStats(e, data) {
 
-	let stats = {
+	const stats = {
 		prevEntry: { value: null, entry: null },
 		prevEntryX: { value: null, entry: null },
 		prevEntryR: { value: null, entry: null },
@@ -348,12 +418,8 @@ function getEntryStats(e, data) {
 	};
 
 	for (let d of data) {
-		if (e.weight && !e.xcalc.netweight) {
-			throw new Error("Missing netweight: " + entry);
-		}
-		
-		if (d.start > e.start) 
-			{ break; }
+		if (e.weight && !e.xcalc.netweight) throw new Error("Missing netweight: " + entry);
+		if (d.start > e.start) break;
 
 		if (d.start > stats.prevEntry.value) 
 			{ 
@@ -384,7 +450,8 @@ function getEntryStats(e, data) {
 				stats.prevEntryR.value = d.start; 
 			}
 
-		if (d.xcalc.netweight > stats.weightMax.value && d.xid == e.xid)
+		if (d.xcalc.netweight > stats.weightMax.value && 
+			d.xid == e.xid)
 			{ 
 				stats.weightMax.entry = d;
 				stats.weightMax.value = d.xcalc.netweight; 
@@ -514,11 +581,11 @@ function progressUpdater(selector) {
 }
 
 function recalculateAllEntries(progressObserver) {
-	let progressEvent = {};
-	let store = db.transaction(["entries"], "readwrite").objectStore("entries");
+	const progressEvent = {};
+	const store = db.transaction(["entries"], "readwrite").objectStore("entries");
 	req = store.count();
 	req.onsuccess = e => { progressEvent.total = e.target.result };
-	let entries = [];
+	const entries = [];
 	let i = 0;
 	store.openCursor().onsuccess = function(event) {
 		let cursor = event.target.result;
@@ -574,9 +641,9 @@ function copyEntryInput(entry) {
 }
 
 function importAllEntries(entries, progressObserver) {
-	let tx = db.transaction(["entries"], "readwrite");
-	let store = tx.objectStore("entries");
-	let progressEvent = {};
+	const tx = db.transaction(["entries"], "readwrite");
+	const store = tx.objectStore("entries");
+	const progressEvent = {};
 	tx.oncomplete = _ => {
 		progressObserver.onCompleted();
 	}
@@ -690,7 +757,7 @@ function formatTime(time) {
 }
 
 function orderGroup(d) {
-    return d[curMetric].value() || 0;
+    return d[curMetric][curAggregation] || 0;
 }
 
 function updateDateRange(range) {
@@ -702,7 +769,7 @@ function updateDateRange(range) {
 
 function valueAccessor(d) {
     if (!d.value) { return 0; }
-    return d.value[curMetric].value();
+    return d.value[curMetric][curAggregation] || 0;
 }
 
 function exportJSON() {
@@ -746,17 +813,13 @@ function resetDateRangeFilter() {
     scaleStack = [];
 }
 
-function updateMetric(metric) {
-    curMetric = metric;
-    return dc;
-}
-
 function formatDuration(d) {
     //return `${d.toLocaleString()}s`;
     let dur = moment.duration(d, "seconds");
     let hours = dur.get("hours");
     let mins = dur.get("minutes");
-    if (mins == 0 && hours == 0) return "?";
+	let seconds = dur.get("seconds");
+    if (mins == 0 && hours == 0) return `${seconds}s`;
     if (mins == 0) return `${hours}h`;
     if (hours == 0) return `${mins}m`;
     return `${hours.toFixed(0)}h, ${mins.toFixed(0)}m`;
@@ -764,29 +827,34 @@ function formatDuration(d) {
 
 function titleForCurMetric(m,d) {
     if (!d.value) { return m; }
-    let group = d.value;
-    switch(curMetric) {
-        case "intensity":
-            let intensity = group.intensity.formatted();
-            let weight = group.weight.formatted();
-            return `${m}<br/>Intensity: ${intensity} (${weight})`
-        case "rvolume":
-            let volume = group.volume.formatted();
-            let volumePercent = group.rvolume.formatted();
-            return `${m}<br/>Volume: ${volume} (${volumePercent})`
-        case "duration":
-            let duration = group.duration.formatted();
-            return `${m}<br/>Duration: ${duration}`;
-    }
+    let value = valueAccessor(d);
+	return `${m}<br/>${metricFormat(value)}`;
+}
+
+function updateMetric() {
+	d3.select("#aggregation")
+		.selectAll("option")
+		.remove();
+	d3.select("#aggregation")
+		.selectAll("option")
+		.data(metricAggregate(curMetric))
+		.enter()
+		.append("option")
+		.attr("value", d => d)
+		.text(d => d == "exceptionCount" ? "count" : d);
+	curAggregation = metricAggregate(curMetric)[0];
+	updateColorScales();
 }
 
 function metricChanged(event) {
-	//if (!event.target.checked) return;
-	// let metric = event.target.value;
-	// hack to work around bootstrap not updating radio checked status
-	// this function is called on click of the label instead because onchange wont happen
-	let metric = event.target.firstElementChild.value;
-	updateMetric(metric);
+	curMetric = event.target[event.target.selectedIndex].value;
+	updateMetric();
+	dc.redrawAll();
+}
+
+function aggregationChanged(event) {
+	curAggregation = event.target[event.target.selectedIndex].value;
+	updateColorScales();
 	dc.redrawAll()
 }
 
@@ -987,8 +1055,10 @@ function databaseReady() {
 function dataReady(data) {
 	minDate = moment(d3.min(data, d => d.start)).startOf('day');
 	entries.add(data);
+	updateMetric();
 	dc.renderAll();
 }
+
 
 function dismissAndShow(event) {
 	let dismissModal = $(event.target.attributes["data-dismiss-target"].value);
@@ -998,13 +1068,60 @@ function dismissAndShow(event) {
 		.one("hidden.bs.modal", _ => targetModal.modal("show"));
 }
 
+function extentColorScale(group) {
+	let colors = colorbrewer.OrRd[5];
+	colors[0] = "#f5f5f5";
+	let extent = d3.extent(group.all(), d => valueAccessor(d) || null);
+	extent[0] = Math.max(0.01, extent[0]);
+	extent[1] = Math.max(1, extent[1]);
+	if (extent[0] == extent[1]) extent[0] = extent[1]/2.0;
+	let range = d3.range(extent[0], extent[1], ((extent[1]-extent[0])/4));
+	switch(curMetric) {
+        case "intensity":  return d3
+			.scale
+			.threshold()
+			.domain([0.01, 0.5, 0.8, 1.0])
+			.range(colors);
+		case "xsets": return d3
+			.scale
+			.threshold()
+			.domain([1, 3, 5, 10])
+			.range(colors);
+		case "rsets": 
+			if (curAggregation === "max") return d3
+				.scale
+				.threshold()
+				.domain([1, 5, 10, 12])
+				.range(colors);
+			else return d3
+				.scale
+				.threshold()
+				.domain(range)
+				.range(colors);
+		case "reps":
+			if (curAggregation === "max") return d3
+				.scale
+				.threshold()
+				.domain([1, 5, 10, 12])
+				.range(colors);
+			else return d3
+				.scale
+				.threshold()
+				.domain(range)
+				.range(colors);
+		default: return d3
+			.scale
+			.threshold()
+			.domain(range)
+			.range(colors);
+    }
+}
+
 /*
 Special Case: ios web clip application
 */
 if (("standalone" in window.navigator) && window.navigator.standalone) {
-	/*
-	We're using a black-translucent status bar in iOS, so leave room in the nav for that.'
-	*/
+	// We're using a black-translucent status bar in iOS, so leave room in the nav for that.
 	$(".navbar").css("padding-top", "20px");
 	/*
 	Disable overscroll on iOS
@@ -1031,11 +1148,11 @@ var match,
 	search = /([^&=]+)=?([^&]*)/g,
 	decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
 	query  = window.location.search.substring(1);
-var urlParams = {};
+const urlParams = {};
 while (match = search.exec(query))
 	urlParams[decode(match[1])] = decode(match[2]);
 const demoMode = urlParams["demo"] !== undefined ? true : false;
-var remoteData = demoMode ? "sample-data.json" : urlParams["data"];
+const remoteData = demoMode ? "sample-data.json" : urlParams["data"];
 
 if (demoMode) {
 	d3.selectAll(".demo-show").attr("hidden", null);
@@ -1046,87 +1163,65 @@ if (remoteData) loadFromRemoteData(remoteData);
 else loadFromDB();
 
 let windowWidth = window.innerWidth;
-let daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 let today = moment(new Date()).endOf('day');
 let oneMonthAgo = moment(today).subtract(1, "month");
 let oneWeekAgo = moment(today).subtract(1, "week");
 
 let curMetric = "intensity";
+let curAggregation = "max";
 let minDate = null;
-var stopwatch = new Stopwatch();
-let scaleStack = [];
+const stopwatch = new Stopwatch();
+const scaleStack = [];
 
-let colors = colorbrewer.OrRd[5];
-colors[0] = "#f5f5f5";
-let colorScales = {
-    intensity: d3
-        .scale
-        .threshold()
-        .domain([0.01, 0.5, 0.8, 1.0])
-        .range(colors),
-    rvolume: d3
-        .scale
-        .threshold()
-        .domain([0.01, 0.5, 0.8, 1.0])
-        .range(colors),
-    duration: d3
-        .scale
-        .threshold()
-        .domain([1, 3600, 5400, 7200])
-        .range(colors)
-};
+function updateColorScales() {
+	let muscleColorScale = extentColorScale(muscleGroup);
+	anteriorDiagram.colors(muscleColorScale);
+	posteriorDiagram.colors(muscleColorScale)
+	workoutCalendar.colors(extentColorScale(dateGroup));
+}
 
-var colorScaleProxy = new Proxy(function() {}, {
-    get (_, key) {
-        return colorScales[curMetric][key];
-    },
-    apply (_, pthis, args) {
-        return colorScales[curMetric](args);
-    }
-});
+const entries = crossfilter([]);
+const dateDimension = entries.dimension(d => d.start);
+const muscleDimension = entries.dimension(d => d.xcalc.muscles, true);
+const prDimension = entries.dimension(d => d.xcalc.prs, true);
+const excerciseDimension = entries.dimension(d => d.xid);
 
-let entries = crossfilter([]);
-let dateDimension = entries.dimension(d => d.start);
-let muscleDimension = entries.dimension(d => d.xcalc.muscles, true);
-let prDimension = entries.dimension(d => d.xcalc.prs, true);
-let excerciseDimension = entries.dimension(d => d.xid);
-
-let dayOfWeek = entries.dimension(d => {
-    let day = d.start.getDay();
+const dayOfWeek = entries.dimension(d => {
+    const day = d.start.getDay();
     return day + '.' + daysOfTheWeek[day];
 });
 
-let dateGroup = dateDimension.group(d3.time.day);
+const dateGroup = dateDimension.group(d3.time.day);
 metricReducer(dateGroup);
 dateGroup.order(orderGroup);
 
-let muscleGroup = muscleDimension.group();
+const muscleGroup = muscleDimension.group();
 metricReducer(muscleGroup);
 muscleGroup.order(orderGroup);
 
-let excerciseGroup = excerciseDimension.group();
+const excerciseGroup = excerciseDimension.group();
 metricReducer(excerciseGroup);
 excerciseGroup.order(orderGroup);
 
-let dayOfWeekGroup = dayOfWeek.group();
+const dayOfWeekGroup = dayOfWeek.group();
 metricReducer(dayOfWeekGroup);
 dayOfWeekGroup.order(orderGroup);
 
-let allEntriesGroup = entries.groupAll();
+const allEntriesGroup = entries.groupAll();
 statsReducer(allEntriesGroup);
 
-let workoutCalendar = dc.calendarGraph("#cal-graph")
+const workoutCalendar = dc.calendarGraph("#cal-graph")
     .valueAccessor(valueAccessor)
     .margins({top: 30, right: 0, bottom: 20, left: 25})
     .group(dateGroup)
     .dimension(dateDimension)
-    .colors(colorScaleProxy)
     .title(d => titleForCurMetric(moment(d.key).format("ddd, MMM D, YYYY"), d))
     .tip("#cal-tip");
 
-//let yExtent = d3.extent(dateGroup.all(), d => d.value.value === 0 ? null : d.value.value);
+//const yExtent = d3.extent(dateGroup.all(), d => d.value.value === 0 ? null : d.value.value);
 
-let timeChart = dc.barChart("#time-chart")
+const timeChart = dc.barChart("#time-chart")
     .valueAccessor(valueAccessor)
     .height(130)
     .gap(1)
@@ -1153,15 +1248,16 @@ timeChart.yAxis().ticks(3, ",.1s");
 // https://github.com/dc-js/dc.js/issues/991
 timeChart._disableMouseZoom = function() {};
 
-let muscleBarChart = dc.rowChart("#muscle-bar-chart")
+const muscleBarChart = dc.rowChart("#muscle-bar-chart")
     .valueAccessor(valueAccessor)
     .height(260)
-    .margins({top: 20, left: 20, right: 20, bottom: 20})
+    .margins({top: 0, left: 15, right: 15, bottom: 8})
     .group(muscleGroup)
     .dimension(muscleDimension)
     .cap(11)
     .gap(1)
     .othersGrouper(false)
+	.renderTitleLabel(true)
     .ordering(d => -d.value.value)
     .ordinalColors(colorbrewer.Reds[3].slice(-1))
     .label(d => {
@@ -1175,32 +1271,34 @@ let muscleBarChart = dc.rowChart("#muscle-bar-chart")
     .elasticX(true)
     .on("filtered", onAnyFilterChange);
 
-muscleBarChart.xAxis().ticks(2);
+muscleBarChart.xAxis().ticks(1);
 
-let dayOfWeekChart = dc.rowChart("#day-of-week-chart")
+const dayOfWeekChart = dc.rowChart("#day-of-week-chart")
     .valueAccessor(valueAccessor)
     .height(200)
-    .margins({top: 20, left: 20, right: 20, bottom: 20})
+    .margins({top: 15, left: 15, right: 15, bottom: 10})
     .group(dayOfWeekGroup)
     .gap(1)
     .dimension(dayOfWeek)
     .ordinalColors(colorbrewer.Reds[3].slice(-1))
     .label( d => d.key.split('.')[1] )
-    .title( d => d.value.value )
+    .title(d => valueAccessor(d).toFixed(2))
     .elasticX(true)
+	.renderTitleLabel(true)
     .on("filtered", onAnyFilterChange);
 
-dayOfWeekChart.xAxis().ticks(4);
+dayOfWeekChart.xAxis().ticks(1);
 
-let exerciseChart =  dc.rowChart("#exercise-chart")
+const exerciseChart =  dc.rowChart("#exercise-chart")
     .valueAccessor(valueAccessor)
     .height(260)
-    .margins({top: 20, left: 20, right: 20, bottom: 20})
+    .margins({top: 15, left: 15, right: 15, bottom: 10})
     .group(excerciseGroup)
     .dimension(excerciseDimension)
     .cap(10)
     .gap(1)
     .othersGrouper(false)
+	.renderTitleLabel(true)
     .ordering(function(d){return -d.value.value;})
     .ordinalColors(colorbrewer.Reds[3].slice(-1))
     .label(function (d) {
@@ -1210,33 +1308,31 @@ let exerciseChart =  dc.rowChart("#exercise-chart")
         }
         return d.key
     })
-    .title(function (d) { return d.value.value; })
+    .title(d => valueAccessor(d).toFixed(2))
     .elasticX(true)
     .on("filtered", onAnyFilterChange);
 
-exerciseChart.xAxis().ticks(3);
+exerciseChart.xAxis().ticks(1);
 
-let anteriorDiagram = dc.anatomyDiagram("#anatomy-diagram-left")
+const anteriorDiagram = dc.anatomyDiagram("#anatomy-diagram-left")
     .anterior()
     .valueAccessor(valueAccessor)
     .group(muscleGroup)
     .dimension(muscleDimension)
-    .colors(colorScaleProxy)
     .title(d => titleForCurMetric(muscleLookup[d.key].name, d))
     .on("filtered", onAnyFilterChange)
     .tip("#anatomy-tip");
 
-let posteriorDiagram = dc.anatomyDiagram("#anatomy-diagram-right")
+const posteriorDiagram = dc.anatomyDiagram("#anatomy-diagram-right")
     .posterior()
     .valueAccessor(valueAccessor)
     .group(muscleGroup)
     .dimension(muscleDimension)
-    .colors(colorScaleProxy)
     .title(d => titleForCurMetric(muscleLookup[d.key].name, d))
     .on("filtered", onAnyFilterChange)
     .tip("#anatomy-tip");
 
-let exerciseListItem = d3.select("#exercise-list")
+const exerciseListItem = d3.select("#exercise-list")
 	.selectAll("a")
 	.data(d3.entries(exerciseLookup))
 	.enter()
@@ -1258,9 +1354,9 @@ exerciseListItem.append("span")
 	.attr("class", "name")
 	.text(d => { return d.value.name });
 
-resizeAllCharts();
+const exerciseListList = new List("exercise-list-container", { valueNames: ["name"] });
 
-let exerciseListList = new List("exercise-list-container", { valueNames: ["name"] });
+resizeAllCharts();
 
 timeChart.turnOnControls = function () {
     if (timeChart.root()) {
@@ -1273,9 +1369,28 @@ timeChart.turnOnControls = function () {
 
 timeChart.turnOffControls = function () {
     if (timeChart.root()) {
-        var attribute = timeChart.controlsUseVisibility() ? "visibility" : "display";
-        var value = timeChart.controlsUseVisibility() ? "hidden" : "none";
+        const attribute = timeChart.controlsUseVisibility() ? "visibility" : "display";
+        const value = timeChart.controlsUseVisibility() ? "hidden" : "none";
         d3.selectAll("#reset-date-range").style(attribute, value);
+        timeChart.selectAll(".filter").style(attribute, value).text(timeChart.filter());
+    }
+    return timeChart;
+};
+
+muscleBarChart.turnOnControls = function () {
+    if (timeChart.root()) {
+        var attribute = timeChart.controlsUseVisibility() ? "visibility" : "display";
+        d3.selectAll("#reset-muscle").style(attribute, null);
+        timeChart.selectAll(".filter").text(timeChart.filterPrinter(timeChart.filters())).style(attribute, null);
+    }
+    return timeChart;
+};
+
+muscleBarChart.turnOffControls = function () {
+    if (timeChart.root()) {
+        const attribute = timeChart.controlsUseVisibility() ? "visibility" : "display";
+        const value = timeChart.controlsUseVisibility() ? "hidden" : "none";
+        d3.selectAll("#reset-muscle").style(attribute, value);
         timeChart.selectAll(".filter").style(attribute, value).text(timeChart.filter());
     }
     return timeChart;
@@ -1283,7 +1398,7 @@ timeChart.turnOffControls = function () {
 
 timeChart.zoomIn = function(domain) {
     scaleStack.push(timeChart.x().domain());
-    let filter = !arguments.length
+    const filter = !arguments.length
         ? timeChart.filters()[0]
         : domain;
     timeChart.x().domain(filter);
@@ -1292,19 +1407,16 @@ timeChart.zoomIn = function(domain) {
 }
 
 timeChart.zoomOut = function() {
-    let scale = scaleStack.pop();
-    if (!scale) {
-        scale = [minDate, today];
-    }
+    const scale = scaleStack.pop() || [minDate, today];
     timeChart.x().domain(scale);
     dc.redrawAll();
     timeChart.turnOnControls();
 }
 
 timeChart.panLeft = function() {
-    let domain = timeChart.x().domain().map(d => moment(d));
-    let filter = timeChart.filter().map(d => moment(d));
-    let diff = filter[1] - filter[0];
+    const domain = timeChart.x().domain().map(d => moment(d));
+    const filter = timeChart.filter().map(d => moment(d));
+    const diff = filter[1] - filter[0];
     filter[0].subtract(diff, "milliseconds");
     filter[1].subtract(diff, "milliseconds");
     if (filter[0].isBefore(minDate)) {
@@ -1327,9 +1439,9 @@ timeChart.panLeft = function() {
 }
 
 timeChart.panRight = function() {
-    let domain = timeChart.x().domain().map(d => moment(d));
-    let filter = timeChart.filter().map(d => moment(d));
-    let diff = filter[1] - filter[0];
+    const domain = timeChart.x().domain().map(d => moment(d));
+    const filter = timeChart.filter().map(d => moment(d));
+    const diff = filter[1] - filter[0];
     filter[0].add(diff, "milliseconds");
     filter[1].add(diff, "milliseconds");
     if (filter[1].isAfter(today)) {

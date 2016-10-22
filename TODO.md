@@ -22,6 +22,9 @@
 * [x] ~~❗️ Link to GutHub project~~
 * [ ] ❔ Faster re-calculations by using PR table
 * [ ] ❗️ Define volume and intensity for duration-based workouts (planks)
+* [ ] ❗️ Exit demo option when clicking "DEMO" indicator
+	* Reload the page w/o `?demo` param
+* [ ] ❕ Query string chart state
 * [ ] ❕ Add more bodyweight and only ring exercises to exercise lookup
 * [ ] ‼️ Debug mode indicator
 	* [ ] Url param `debug` to enable
@@ -142,4 +145,5 @@
 * [ ] ❗️ Dropbox sync using dropbox.js
 * 💡❔ Track soreness
 * 💡❔ Track body dimensions
+* [ ] When there is a workout but no duration data, mark the calendar graph cell anyway to contrast with cells where there was no workout at all. perhaps use a shade lighter than the lightest color scale?
 * [ ] 

@@ -1,3 +1,16 @@
+## Terminology
+
+* **Workouts** are broken down into **sets** of exercises.
+* Each set is associated with *exactly one* exercise.
+* Each set is performed at one specific **weight**.
+* Each set consists of one or more **reps** (repetitions) of an exercise at that weight.*
+
+<small>\* Not all exercises are based on lifting weight for certain reps. Some are time-based, but they are still grouped into sets.</small>
+
+For example, Alice performs a 225lbs deadlift for 5 reps. The repeats this 3 times. Thus, Alice has performed 3 sets of 5 reps at 225lbs, or 3x5@225. After those 3 sets, Alice decides to test her max, so she performs a single set at 275bs, or 1x1@275. In total, Alice performed 4 sets, 3 of them at 225lbs for 5 reps and 1 of them at 275 for a single rep.
+
+How did Alice do on her workouts? In weight training there are two metrics that matter most: volume and intensity. 
+
 ## Metrics
 
 There are two metrics that Muscle Book uses to measure workout performance: intensity and volume. There is a third metric available to you: duration, but this is less relevant for measuring performance (a long workout isn't necessarily a good workout). 
@@ -8,13 +21,13 @@ You can achieve high volume with low intensity by lifting many reps and/or sets 
 
 ### Intensity
 
-Intensity is the percentage of your maximum weight for a particular exercise. If your best overhead press is 120lbs and you lift 60lbs, then your intensity is 50%. Because intensity is relative to past data, lifting the same weight on two different day may result in different intensities. For example: if last month your max overhead press was 120lbs and you lifted 60lbs that was 50% intensity. But last week you hit a new record, lifting 125lbs. From that day forward, whenever you lift 60lbs, that will count as 48% intensity, but the intensity of all the days before that remain unaffected.
+Intensity is how heavy the lift was compared to past performance. If Alice's best deadlift in the past was 270lbs, then her first three sets had an intensity of 83% (225/270x100). Her final set's intensity was 101.8%. From that point on, when calculating intensity, 101.8% will be used. For example, if Alice lifts 3x5@225 tomorrow, her intensity will be 81%, not 83%. By the way, intensity is not retroactive. When looking back at today, that 3x3@225 is still 83% because intensity is based on the max weight *up to that workout*.
 
 For exercises that are primarily measured in duration (ie. planks): the intensity is calculated as the percent of the max time up to that workout. For example, if your best record for planks is 1 min, and you perform a plank for 1 min and 20 seconds, then your intensity will be 130%.
 
 ### Volume
 
-Volume is simply the total weight moved. If you deadlift 200lbs 5 times, the volume will be 1000lbs. If you performed 5 sets at that weight and rep range then your volume will be 5000lbs. 
+Volume is just the total weight moved, calculated by multiplying the reps and weight and summing that for all sets. Alice's workout had a volume of 3,650lbs (3x5x225 + 1x1x275 = 3,375 + 275 = 3,650).
 
 For exercises that are primarily measured in duration (ie. planks): volume is calculated as the total time during that workout. For example: If you held a 1 minute plank for 3 sets, the duration will be 3 minutes.
 

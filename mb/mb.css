@@ -53,6 +53,10 @@ a:focus, a:hover {
 /*.list-group-item input {
 	width: 100%;
 }*/
+.custom-select:focus, .form-control:focus {
+	border: 1px solid rgba(0, 0, 0, .15);
+	outline: 0;
+}
 .no-padding {
 	padding: 0;
 }
@@ -95,8 +99,8 @@ dl, ol, ul {
 .list-group .input-group .input-group-addon:first-child {
 	border-left: none;
 }
-.list-group .input-group .no-left-border {
-	border-left: none;
+.no-left-border {
+	border-left: none !important;
 }
 /*.list-group .input-group .input-group-addon {
 	border-bottom: none;
@@ -200,7 +204,8 @@ path.muscle.highlight {
 	left: 5px;
 	top: 5px;
 	text-align: left;
-	opacity: 0.75;
+	opacity: 0.9;
+	z-index: 1000;
 }
 .no-bottom-pad {
 	margin: 0;
@@ -224,6 +229,29 @@ path.muscle.highlight {
   table-layout: fixed;
   border-collapse: separate; 
 }
+
+/*.dc-chart .grid-line, .dc-chart .axis .grid-line {
+    visibility: hidden;
+}*/
+
+.no-axis.dc-chart .axis path, 
+.no-axis.dc-chart .axis line,
+.no-axis.dc-chart .axis text, 
+.no-axis.dc-chart .axis .grid-line {
+    visibility: hidden;
+}
+
+.dc-chart .axis path, 
+.dc-chart .axis line,
+.axis .grid-line {
+	stroke: #373a3c;
+    stroke-width: 0.6;
+}
+
+.dc-chart .axis text {
+    fill: #373a3c;
+}
+
 .btn-group-justified .btn,
 .btn-group-justified .btn-group {
     float: none;
@@ -258,7 +286,7 @@ path.muscle.highlight {
 	opacity: 0.8;
 }
 /* Remove dropdown menu caret */
-.dropdown-toggle::after {
+.nocaret::after {
 	display:none;
 }
 .btn-group-justified .btn .btn,
@@ -269,15 +297,16 @@ path.muscle.highlight {
 .btn-group-justified .btn-group .dropdown-menu {
 	left: auto; 
 }
-.pad-bottom {
-	margin-bottom: .75rem;
-}
 /* Override dc.css "float: left" which causes computed width to be 1 */
 div.dc-chart {
 	float: initial;
 }
 .anatomy .dc-chart {
 	float: left;
+}
+/* Fix weird button spacing issue */
+div.btn-toolbar {
+	line-height: initial;
 }
 /* Bootstrap includes extra margin at the bottom for some reason. */
 /*.progress {
@@ -313,6 +342,25 @@ div.dc-chart {
 		padding-right: initial;
 		padding-left: initial;
 	}
+	.full-bleed-xs-dn {
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+		border-bottom-right-radius: 0;
+		border-top-right-radius: 0;
+		margin-bottom: -1px !important;
+	}
+	.no-border-xs-dn {
+		border: 0;
+	}
+	.no-left-border-xs-dn {
+		border-left: 0 !important;
+	}
+	.no-right-border-xs-dn {
+		border-right: 0 !important;
+	}
+	.btn-outline-danger > path {
+		fill: #d9534f;
+	}
 	/*label[class^="col-"] {
 		padding-left: 0;
 	}*/
@@ -325,5 +373,8 @@ div.dc-chart {
 	div[class^="col-"] {
 		padding-right: 0.375rem;
 		padding-left: 0.375rem;
+	}
+	.pad-bottom-sm {
+		margin-bottom: .75rem;
 	}
 }

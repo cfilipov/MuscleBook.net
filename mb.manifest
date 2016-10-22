@@ -1,6 +1,6 @@
 CACHE MANIFEST
 # Muscle Book
-# Cache manifest version 0.0.0-alpha.6
+# Last Update: Fri Oct 21 2016 20:13:14 GMT-0700 (PDT)
 index.html
 Icon512.png
 mb/anatomy.js
@@ -24,7 +24,14 @@ lib/inobounce.min.js
 lib/jquery.min.js
 lib/list.min.js
 lib/moment.min.js
-lib/noun_471105_cc.svg
+lib/font-awesome/css/font-awesome.css
+lib/font-awesome/css/font-awesome.min.css
+lib/font-awesome/fonts/fontawesome-webfont.eot
+lib/font-awesome/fonts/fontawesome-webfont.svg
+lib/font-awesome/fonts/fontawesome-webfont.ttf
+lib/font-awesome/fonts/fontawesome-webfont.woff
+lib/font-awesome/fonts/fontawesome-webfont.woff2
+lib/font-awesome/fonts/FontAwesome.otf
 lib/reductio.js
 lib/tether.min.js
 
