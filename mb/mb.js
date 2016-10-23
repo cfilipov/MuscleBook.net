@@ -802,7 +802,7 @@ function resizeAllCharts() {
     sizeToFitRoot(exerciseChart);
 
     let calWidth = workoutCalendar.root()[0][0].offsetWidth;
-    if (calWidth < 544) {
+    if (calWidth < 480) {
         workoutCalendar.daysBack(240);
     } else {
         workoutCalendar.daysBack(365);
@@ -827,15 +827,10 @@ function resetDateRangeFilter() {
 }
 
 function formatDuration(d) {
-    //return `${d.toLocaleString()}s`;
     let dur = moment.duration(d, "seconds");
-    let hours = dur.get("hours");
-    let mins = dur.get("minutes");
-	let seconds = dur.get("seconds");
-    if (mins == 0 && hours == 0) return `${seconds}s`;
-    if (mins == 0) return `${hours}h`;
-    if (hours == 0) return `${mins}m`;
-    return `${hours.toFixed(0)}h, ${mins.toFixed(0)}m`;
+	if (dur.get("hours") >= 1) return `${dur.asHours().toFixed(1)}h`;
+	if (dur.get("minutes") >= 1) return `${dur.asMinutes().toFixed(1)}m`;
+	return `${dur.asSeconds().toFixed(1)}s`;
 }
 
 function titleForCurMetric(m,d) {
@@ -1056,6 +1051,10 @@ function onAnyFilterChange() {
             .text(allEntriesGroup.value().days.exceptionCount);
 }
 
+function exerciseName(d) {
+	return exerciseLookup[d.xid] ? exerciseLookup[d.xid].name : "unknown";
+}
+
 function loadFromRemoteData(url) {
 	d3.json(url, function(data) {
 		for (entry of data) {
@@ -1194,10 +1193,7 @@ function updateColorScales() {
 	let muscleColorScale = extentColorScale(muscleGroup);
 	anteriorDiagram.colors(muscleColorScale);
 	posteriorDiagram.colors(muscleColorScale)
-	// muscleBarChart.colors(muscleColorScale);
 	workoutCalendar.colors(extentColorScale(dateGroup));
-	// dayOfWeekChart.colors(extentColorScale(dayOfWeekGroup));
-	//exerciseChart.colors(extentColorScale(excerciseGroup));
 }
 
 const entries = crossfilter([]);
@@ -1239,6 +1235,37 @@ const workoutCalendar = dc.calendarGraph("#cal-graph")
     .tip("#cal-tip");
 
 //const yExtent = d3.extent(dateGroup.all(), d => d.value.value === 0 ? null : d.value.value);
+
+const dataTable = dc.dataTable("#data-table")
+    .dimension(dateDimension)
+	.group(d => `Workout ${d.workout.toLocaleString()}: ${moment(d.start).format("ddd, MMM D, YYYY")}`)
+    .columns([
+		{
+			label: "Exercise",
+			format: d => exerciseName(d)
+		},
+		{
+			label: "Reps",
+			format: d => d.reps
+		},
+		{
+			label: "Weight",
+			format: d => d.xcalc.netweight.toLocaleString()
+		},
+		{
+			label: "Duration",
+			format: d => formatDuration(d.duration)
+		}
+	])
+    .order(d3.descending)
+	.size(100)
+	.sortBy(d => d.start)
+	.on("renderlet", chart => {
+		chart.root()
+			.selectAll(".dc-table-group")
+			.classed("bg-inverse", true)
+			.classed("text-white", true);
+    });
 
 const timeChart = dc.barChart("#time-chart")
     .valueAccessor(curMetricValueAccessor)
