@@ -47,6 +47,9 @@ label.btn.btn-secondary:hover {
 a:focus, a:hover {
 	text-decoration: none;
 }
+.dc-chart text.axis {
+	font: 10px sans-serif;
+}
 /*input.form-control {
 	text-align: right;
 	width: 100%;
@@ -235,15 +238,17 @@ path.muscle.highlight {
     visibility: hidden;
 }*/
 
-/*.no-axis.dc-chart .axis text {
+.no-axis.dc-chart .axis text,
+.no-axis.dc-chart .axis  {
     visibility: hidden;
-}*/
+}
 
-.dc-chart .axis path, 
-.dc-chart .axis line,
-.axis .grid-line {
+.no-axis.dc-chart .axis path, 
+.no-axis.dc-chart .axis line,
+.no-axis .axis .grid-line {
 	stroke: #373a3c;
     stroke-width: 0.6;
+	visibility: hidden;
 }
 
 .dc-chart .axis text {
@@ -274,7 +279,6 @@ path.muscle.highlight {
 	right: 5px;
 	top: 5px;
 	text-align: right;
-	opacity: 0.8;
 }
 .bottom-right {
 	position: absolute;
@@ -305,6 +309,18 @@ div.dc-chart {
 /* Fix weird button spacing issue */
 div.btn-toolbar {
 	line-height: initial;
+}
+
+.full-bleed {
+	width: 100%;
+}
+.gry-txt {
+	color: #55595c;
+}
+.right-caret::after {
+	position: absolute;
+	right: 11.5px;
+	top: 45%;
 }
 /* Bootstrap includes extra margin at the bottom for some reason. */
 /*.progress {
@@ -381,5 +397,9 @@ div.btn-toolbar {
 	}
 	.pad-bottom-sm {
 		margin-bottom: .75rem;
+	}
+	.bottom-rounded-border-sm-up {
+		border-bottom-left-radius: 0.25rem !important;
+		border-bottom-right-radius: 0.25rem !important;
 	}
 }

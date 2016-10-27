@@ -2,8 +2,9 @@ dc.calendarGraph = function(parent, chartGroup) {
     // http://bl.ocks.org/peterbsmith2/a37f2b733a75a6f348c2
 
     var _chart = dc.marginMixin(dc.colorMixin(dc.baseMixin({})));
-	var _squareSize = 13;
-	var _daysBack = 365;
+	var _squareSize = undefined;
+	var _gap = 2;
+	var _daysBack = undefined;
     let _tipSelector = ".tip";
 
     // http://stackoverflow.com/questions/11382606
@@ -60,54 +61,63 @@ dc.calendarGraph = function(parent, chartGroup) {
 		return _chart;
 	};
 
-    _chart.width = function(width) {
-        if (!arguments.length) {
-            return undefined;
-        }
-        return _chart;
-    };
+	_chart.gap = function(_) {
+		if (!arguments.length) return _gap;
+		_gap = _;
+		return _chart;
+	};
 
-    _chart.height = function(height) {
-        if (!arguments.length) {
-            return undefined;
-        }
-        return _chart;
-    };
+	_chart.squareSize = function(_) {
+		if (!arguments.length) return _squareSize;
+		_squareSize = _;
+		return _chart;
+	};
+
+    // _chart.width = function(width) {
+    //     if (!arguments.length) {
+    //         return undefined;
+    //     }
+    //     return _chart;
+    // };
+
+    // _chart.height = function(height) {
+    //     if (!arguments.length) {
+    //         return undefined;
+    //     }
+    //     return _chart;
+    // };
 
     _chart._doRedraw = function () {
         return _chart._doRender();
     };
     
     _chart._doRender = function () {
-        var numCols = Math.ceil(_daysBack / 7);
-		var calendar = [];
+        // var numCols = Math.ceil(daysBack / 7);
+		const today = new Date();
+		const squareSize = calculateSquareSize(today);
+		const daysBack = calculateDaysBack(today, squareSize);
+		const calendar = [];
 		var yAxis = [];
-		var today = new Date();
-		var lastYear = addDays(today,-_daysBack);
+		var lastYear = addDays(today, -daysBack);
 		var col = 0;
 		var month = lastYear.getMonth();
 		var first = true;
 		var yAxisFormatter = d3.time.format("%b");
 
-        var width = 11 + (numCols * _squareSize); // 1 square + 53 squares with 2px padding
-		var height = 11 + 6 * _squareSize; //1 square + 6 squares with 2px padding
-		var legendX = 20;
-		var legendY = height + 10;
-		var viewboxWidth = width + _chart.margins().left + _chart.margins().right;
-		var viewboxHeight = height + _chart.margins().top + _chart.margins().bottom;
-		var aspect = viewboxWidth / viewboxHeight;
+        // var width = 11 + (numCols * squareSize); // 1 square + 53 squares with 2px padding
+		// var height = 11 + 6 * squareSize; //1 square + 6 squares with 2px padding
+		// var legendX = 20;
+		// var legendY = height + 10;
+		// var viewboxWidth = width + _chart.margins().left + _chart.margins().right;
+		// var viewboxHeight = height + _chart.margins().top + _chart.margins().bottom;
+		// var aspect = viewboxWidth / viewboxHeight;
 
         _chart.resetSvg();
-
-        _chart.svg()
-            .attr("viewBox", "0 0 " + viewboxWidth + " " + viewboxHeight)
-			.attr("preserveAspectRatio", "xMidYMid meet")
-			.attr("style", "margin: 0.5rem;");
         
         let g = _chart.svg().append("g")
 			.attr("transform", "translate(" + _chart.margins().left + "," + _chart.margins().top + ")" );
 
-        for (i=0; i <= _daysBack; i++) {
+        for (i=0; i <= daysBack; i++) {
 			dateString = lastYear.toJSONLocal();
 			var date = makeUTCDate(dateString);
 			var c = date.getDay();
@@ -136,31 +146,34 @@ dc.calendarGraph = function(parent, chartGroup) {
 			.style("fill", "#767676")
 			.attr("text-anchor", "middle")
 			.attr("dx", "-15")
-			.attr("dy", "22");
+			.attr("dy", (squareSize * 2) - _gap)
+			.classed("axis", true);
 
 		g.append("text")
 			.text("W")
 			.style("fill", "#767676")
 			.attr("text-anchor", "middle")
 			.attr("dx", "-15")
-			.attr("dy", "48");
+			.attr("dy", (squareSize * 4) - _gap)
+			.classed("axis", true);
 
 		g.append("text")
 			.text("F")
 			.attr("text-anchor", "middle")
 			.style("fill", "#767676")
 			.attr("dx", "-15")
-			.attr("dy", "74");
+			.attr("dy", (squareSize * 6) - _gap)
+			.classed("axis", true);
 
 		g.selectAll(".cal")
 				.data(calendar)
 				.enter()
 			.append("rect")
 				.attr("class", "cal")
-				.attr("width", _squareSize - 2)
-				.attr("height", _squareSize - 2)
-				.attr("x", function(d, i) { return d.col * _squareSize; })
-				.attr("y", function(d, i) { return d.date.getDay() * _squareSize; })
+				.attr("width", squareSize - _gap)
+				.attr("height", squareSize - _gap)
+				.attr("x", function(d, i) { return d.col * squareSize; })
+				.attr("y", function(d, i) { return d.date.getDay() * squareSize; })
 				.attr("fill", "#eeeeee");
 
 		g.selectAll(".y")
@@ -169,33 +182,34 @@ dc.calendarGraph = function(parent, chartGroup) {
 			.append("text")
 				.text(d => d.month)
 				.attr("dy", -10)
-				.attr("dx", d => d.col * _squareSize)
-				.attr("fill", "#767676");
+				.attr("dx", d => d.col * squareSize)
+				.attr("fill", "#767676")
+				.classed("axis", true);
         
-        g.selectAll('.legend')
-				.data(_chart.colors().range())
-				.enter()
-			.append('rect')
-				.attr('class','legend')
-				.attr('width', _squareSize - 2)
-				.attr('height', _squareSize - 2)
-				.attr('x', (d, i) => legendX + i * _squareSize + 5)
-				.attr('y', legendY)
-				.attr('fill', d => d);
+        // g.selectAll('.legend')
+		// 		.data(_chart.colors().range())
+		// 		.enter()
+		// 	.append('rect')
+		// 		.attr('class','legend')
+		// 		.attr('width', squareSize - _gap)
+		// 		.attr('height', squareSize - _gap)
+		// 		.attr('x', (d, i) => legendX + i * squareSize + 5)
+		// 		.attr('y', legendY)
+		// 		.attr('fill', d => d);
 
-		g.append('text')
-			.attr('class','legend')
-			.attr('x', legendX - 35)
-			.attr('y', legendY + 10)
-			.text('Less')
-			.attr('fill','#767676');
+		// g.append('text')
+		// 	.attr('class','legend')
+		// 	.attr('x', legendX - 35)
+		// 	.attr('y', legendY + 10)
+		// 	.text('Less')
+		// 	.attr('fill','#767676');
 
-		g.append('text')
-			.attr('class','legend')
-			.attr('x', legendX + _chart.colors().range().length * _squareSize + 10)
-			.attr('y', legendY + 10)
-			.text('More')
-			.attr('fill','#767676');
+		// g.append('text')
+		// 	.attr('class','legend')
+		// 	.attr('x', legendX + _chart.colors().range().length * squareSize + 10)
+		// 	.attr('y', legendY + 10)
+		// 	.text('More')
+		// 	.attr('fill','#767676');
 
         var data = _chart.data();
 		var events = {};
@@ -231,6 +245,21 @@ dc.calendarGraph = function(parent, chartGroup) {
 
         return _chart;
     };
+
+	function calculateSquareSize(today) {
+		if (_squareSize == undefined) {
+			return Math.floor(_chart.effectiveHeight() / 7);
+		}
+		return _squareSize
+    }
+
+	function calculateDaysBack(today, squareSize) {
+        if (_daysBack === undefined) {
+			const cols = Math.floor(_chart.effectiveWidth() / (squareSize));
+			return (cols * 7) - (7 - (today.getDay()));
+        }
+		return _daysBack;
+    }
 
     return _chart.anchor(parent, chartGroup);
 };
