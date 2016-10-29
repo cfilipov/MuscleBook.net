@@ -54,19 +54,18 @@ Navigation
     </li>
   </ul>
 </nav>
-
+<span class="demo-show tag tag-danger" style="color:#fefefe; font-weight:bold; font-size: 1rem; position: fixed; top: 55px; right: 10px; z-index: 1000; opacity: 90%;" hidden="true">SAMPLE DATA</span>
+<div class="debug-only tag tag-default" style="position: fixed; top: 55px; left: 10px; z-index: 1000; opacity: 90%;">
+	<span class="card-text hidden-sm-up">xs</span>
+	<span class="card-text hidden-xs-down hidden-md-up">sm</span>
+	<span class="card-text hidden-sm-down hidden-lg-up">md</span>
+	<span class="card-text hidden-md-down hidden-xl-up visible">lg</span>
+	<span class="card-text hidden-lg-down visible">xl</span>
+</div>
 <!-- 
 Main content
 -->
 <div class="scrollable">
-	<span class="demo-show tag tag-danger" style="color:#fefefe; font-weight:bold; font-size: 1rem; position: fixed; top: 55px; right: 10px; z-index: 1000; opacity: 90%;" hidden="true">SAMPLE DATA</span>
-	<div class="debug-only tag tag-default" style="position: fixed; top: 55px; left: 10px; z-index: 1000; opacity: 90%;">
-		<span class="card-text hidden-sm-up">xs</span>
-		<span class="card-text hidden-xs-down hidden-md-up">sm</span>
-		<span class="card-text hidden-sm-down hidden-lg-up">md</span>
-		<span class="card-text hidden-md-down hidden-xl-up visible">lg</span>
-		<span class="card-text hidden-lg-down visible">xl</span>
-	</div>
 	<div class="container">
 		<div class="row mx-0">
 			<div class="col-xs-12 col-md-4 col-lg-3">
@@ -285,13 +284,39 @@ Main content
 						</div>
 					</div>
 
-					<div class="col-sm-6 col-xl-4">
+					<div class="col-sm-6">
 						<div class="card">
 							<div class="card-header" style="height: 41px;">
 								Reps
 							</div>
 							<div id="reps-chart" style="position:relative;">								
 								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:repsChart.filterAll();dc.redrawAll();">
+									reset
+								</a>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-sm-6">
+						<div class="card">
+							<div class="card-header" style="height: 41px;">
+								Sets
+							</div>
+							<div id="sets-chart" style="position:relative;">								
+								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:setsChart.filterAll();dc.redrawAll();">
+									reset
+								</a>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xs-12">
+						<div class="card">
+							<div class="card-header" style="height: 41px;">
+								Weights
+							</div>
+							<div id="weights-chart" style="position:relative;">								
+								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:weightsChart.filterAll();dc.redrawAll();">
 									reset
 								</a>
 							</div>

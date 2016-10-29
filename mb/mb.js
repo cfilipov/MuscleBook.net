@@ -850,17 +850,19 @@ function updateMetric() {
 		.text(d => d == "exceptionCount" ? "count" : d);
 	curAggregation = metricAggregate(curMetric)[0];
 	updateColorScales();
+	timeChart.yAxisLabel(`${curMetric} (${curAggregation})`, 20);
 }
 
 function metricChanged(event) {
 	curMetric = event.target[event.target.selectedIndex].value;
 	updateMetric();
-	dc.redrawAll();
+	dc.renderAll();
 }
 
 function aggregationChanged(event) {
 	curAggregation = event.target[event.target.selectedIndex].value;
 	updateColorScales();
+	timeChart.yAxisLabel(`${curMetric} (${curAggregation})`, 20);
 	dc.redrawAll()
 }
 
@@ -1196,44 +1198,96 @@ function updateColorScales() {
 }
 
 const entries = crossfilter([]);
+
+// Crossfilter: All Group
+const allEntriesGroup = entries.groupAll();
+statsReducer(allEntriesGroup);
+
+// Crossfilter: Date
 const dateDimension = entries.dimension(d => d.start);
-const muscleDimension = entries.dimension(d => d.xcalc.muscles, true);
-const prDimension = entries.dimension(d => d.xcalc.prs, true);
-const excerciseDimension = entries.dimension(d => d.xid);
-
-const repsScale = d3.scale.linear().domain([1, 12]).range([1, 12]).clamp(true);
-const repsDimension = entries.dimension(d => repsScale(d.reps));
-// const setsScale = d3.scale.linear().domain([1, 10]).range([1, 10]).clamp(true);
-// const setsDimension = entries.dimension(d => repsDimension(d.));
-
-//const weightDimension = entries.dimension(d3.scale.linear().domain().range(d3.range(5, 10, 1)));
-
-const dayOfWeek = entries.dimension(d => {
-    const day = d.start.getDay();
-    return day + '.' + daysOfTheWeek[day];
-});
-
 const dateGroup = dateDimension.group(d3.time.day);
 metricReducer(dateGroup);
 dateGroup.order(orderGroup);
 
+// Crossfilter: Muscle
+const muscleDimension = entries.dimension(d => d.xcalc.muscles, true);
 const muscleGroup = muscleDimension.group();
 metricReducer(muscleGroup);
 muscleGroup.order(orderGroup);
 
+// Crossfilter: PRs
+const prDimension = entries.dimension(d => d.xcalc.prs, true);
+
+// Crossfilter: Exercise
+const excerciseDimension = entries.dimension(d => d.xid);
 const excerciseGroup = excerciseDimension.group();
 metricReducer(excerciseGroup);
 excerciseGroup.order(orderGroup);
 
+// Crossfilter: Reps
+const repsScale = d3.scale.linear().domain([1, 12]).range([1, 12]).clamp(true);
+const repsDimension = entries.dimension(d => repsScale(d.reps));
+const repsGroup = repsDimension.group();
+
+// Crossfilter: Workout
+metricReducer(dateGroup);
+dateGroup.order(orderGroup);
+
+const workoutDimension = entries.dimension(d => d.workout);
+const setsByWorkout = workoutDimension.group().reduceCount();
+
+// Crossfilter: Sets (fake dimension and group)
+const setsDimension = {
+    filter: v => {
+        if (v !== null)
+            throw new Error("don't know how to do this!");
+        return workoutDimension.filter(null);
+    },
+    filterRange: r => workoutDimension.filter(v => v >= r[0] && v < r[1]),
+    filterExact: e => {
+		const wids = new Set();
+		setsByWorkout.all().forEach(d => {
+			if (d.value == e) wids.add(d.key);
+		});
+		console.log(wids);
+		workoutDimension.filter(d => wids.has(d));
+    },
+    filterFunction: function(f) {
+		const wids = new Set();
+		setsByWorkout.all().forEach(d => {
+			if (f(d.value)) wids.add(d.key);
+		});
+		console.log(wids);
+		workoutDimension.filter(d => wids.has(d));
+	}
+};
+
+const setsGroup = {
+    all: _ => d3.layout
+		.histogram()
+		.value(d => d.value || null)
+		.bins(d3.range(1,12,1))(setsByWorkout.all())
+		.map(b => ({ key: b.x, value: b.y }))
+};
+
+// Crossfilter: Weight
+const weightsDimension = entries.dimension(d => d.xcalc.netweight);
+const allWeightsGroup = weightsDimension.group().reduceCount();
+const binnedWeightsGroup = {
+    all: _ => {
+    	return allWeightsGroup.all()
+    		.filter(d => d.value > 0 && d.key > 0);
+    }
+};
+
+// Crossfilter: Day of Week
+const dayOfWeek = entries.dimension(d => {
+    const day = d.start.getDay();
+    return day + '.' + daysOfTheWeek[day];
+});
 const dayOfWeekGroup = dayOfWeek.group();
 metricReducer(dayOfWeekGroup);
 dayOfWeekGroup.order(orderGroup);
-
-const allEntriesGroup = entries.groupAll();
-statsReducer(allEntriesGroup);
-
-const repsGroup = repsDimension.group();
-// const setsGroup = setsDimension.group();
 
 const workoutCalendar = dc.calendarGraph("#cal-graph")
     .valueAccessor(curMetricValueAccessor)
@@ -1282,10 +1336,9 @@ const timeChart = dc.barChart("#time-chart")
     .height(120)
     .gap(1)
     .transitionDuration(1000)
-    .margins({top: 10, right: 10, bottom: 20, left: 33})
+    .margins({top: 10, right: 10, bottom: 20, left: 30})
     .dimension(dateDimension)
     .group(dateGroup)
-    // .colorDomain(colorbrewer.Reds[3])
     .colorAccessor(curMetricValueAccessor)
     .x(d3.time.scale().domain([oneMonthAgo, today]))
     //.y(d3.scale.pow().exponent(3))
@@ -1314,29 +1367,79 @@ const timeChart = dc.barChart("#time-chart")
     });
 
 const repsChart = dc.barChart("#reps-chart")
-    .height(175)
+    .height(225)
     .gap(1)
     .transitionDuration(1000)
-    .margins({top: 10, right: 10, bottom: 20, left: 30})
+    .margins({top: 10, right: 10, bottom: 20, left: 25})
     .dimension(repsDimension)
     .group(repsGroup)
 	.colorDomain(colorbrewer.Reds[3])
-	.centerBar(true)
-	.gap(1)
-    .elasticY(true)
-	.title(d => d.value)
-	.x(d3.scale.linear().domain([0, 13]))
-    .renderHorizontalGridLines(true);
+	.xUnits(dc.units.ordinal)
+	.renderHorizontalGridLines(true)
+    .x(d3.scale.ordinal().domain(d3.range(0, 13, 1)))
+	.title(d => d.value || null)
+	.yAxisLabel("sets", 20);
 
-repsChart.yAxis().ticks(5);
-repsChart.xAxis().tickFormat(v => {
-	if (v == 12) {
-		return "12+";
-	} else if (v > 12) {
-		return "";
-	} else {
-		return v;
-	}
+repsChart.xAxis().ticks(5);
+repsChart.xAxis().tickFormat(v => v == 12 ? "12+" : v);
+repsChart.yAxis()
+	.tickFormat(d3.format("d"))
+    .tickSubdivide(0);
+
+const setsChart = dc.barChart("#sets-chart")
+    .height(225)
+    .gap(1)
+    .transitionDuration(1000)
+    .margins({top: 10, right: 10, bottom: 20, left: 25})
+    .dimension(setsDimension)
+    .group(setsGroup)
+	.colorDomain(colorbrewer.Reds[3])
+	.xUnits(dc.units.ordinal)
+	.renderHorizontalGridLines(true)
+    .x(d3.scale.ordinal().domain(d3.range(0, 13, 1)))
+	.title(d => d.value || null)
+	.yAxisLabel("workouts", 20);
+
+setsChart.xAxis().ticks(5);
+setsChart.xAxis().tickFormat(v => v == 12 ? "12+" : v);
+setsChart.yAxis()
+	.tickFormat(d3.format("d"))
+    .tickSubdivide(0);
+
+const weightsChart = dc.barChart("#weights-chart")
+    .height(225)
+    .gap(1)
+    .valueAccessor(d => d.value)
+    .transitionDuration(1000)
+    .margins({top: 10, right: 10, bottom: 20, left: 25})
+    .dimension(weightsDimension)
+    .group(binnedWeightsGroup)
+	.colorDomain(colorbrewer.Reds[3])
+    .elasticY(true)
+    .elasticX(true)
+    .xUnits(dc.units.ordinal)
+    .renderHorizontalGridLines(true)
+    .x(d3.scale.ordinal())
+	.title(d => d.key || null)
+	.yAxisLabel("sets", 20);
+
+weightsChart.yAxis()
+	.tickFormat(d3.format("d"))
+    .tickSubdivide(0);
+
+function prepareWeightsChart(chart) {
+	const keys = binnedWeightsGroup.all().map(d => d.key);
+	const ticks = keys.length > 12 ? keys.filter((d,i) => !(i%10)) : keys;
+	weightsChart.xAxis().tickValues(ticks);
+}
+
+weightsChart.on("preRender", chart => {
+	prepareWeightsChart(chart);
+});
+
+weightsChart.on("preRedraw", chart => {
+	prepareWeightsChart(chart);
+	chart.render();
 });
 
 let rangeStart = moment(today).subtract(1, "week");
@@ -1348,11 +1451,11 @@ timeChart._disableMouseZoom = function() {};
 
 const muscleBarChart = dc.rowChart("#muscle-bar-chart")
     .valueAccessor(curMetricValueAccessor)
-    .height(175)
+    .height(225)
     .margins({top: 10, left: 10, right: 10, bottom: 10})
     .group(muscleGroup)
     .dimension(muscleDimension)
-    .cap(7)
+    .cap(10)
     .gap(3)
     .othersGrouper(false)
 	.renderTitleLabel(true)
@@ -1365,7 +1468,7 @@ const muscleBarChart = dc.rowChart("#muscle-bar-chart")
         }
         return d.key
     })
-    .title(d => curMetricValueAccessor(d).toFixed(2))
+    .title(d => curMetricValueAccessor(d).toFixed(2) || null)
     .elasticX(true)
     .on("filtered", onAnyFilterChange);
 
@@ -1373,12 +1476,12 @@ muscleBarChart.xAxis().ticks(5);
 
 const dayOfWeekChart = dc.rowChart("#day-of-week-chart")
     .valueAccessor(curMetricValueAccessor)
-    .height(175)
+    .height(225)
     .margins({top: 10, left: 10, right: 10, bottom: 10})
     .group(dayOfWeekGroup)
     .gap(3)
     .dimension(dayOfWeek)
-    .label( d => d.key.split('.')[1] )
+    .label(d => d.key.split('.')[1])
     .colorAccessor(curMetricValueAccessor)
     .title(d => curMetricValueAccessor(d).toFixed(2))
     .elasticX(true)
@@ -1389,11 +1492,11 @@ dayOfWeekChart.xAxis().ticks(5);
 
 const exerciseChart =  dc.rowChart("#exercise-chart")
     .valueAccessor(curMetricValueAccessor)
-    .height(175)
+    .height(225)
     .margins({top: 10, left: 10, right: 10, bottom: 10})
     .group(excerciseGroup)
     .dimension(excerciseDimension)
-    .cap(7)
+    .cap(10)
     .gap(3)
     .othersGrouper(false)
 	.renderTitleLabel(true)

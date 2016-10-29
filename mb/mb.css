@@ -68,6 +68,10 @@ a:focus, a:hover {
 	stroke-width: 16px;
 	stroke: black;
 }*/
+.dc-chart .y-axis-label {
+	font-size: 0.75rem;
+	fill: #767676;
+}
 .col-form-label {
 	padding-top: 0;
 	padding-bottom: 0;
