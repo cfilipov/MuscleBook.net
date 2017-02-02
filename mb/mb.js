@@ -134,6 +134,27 @@ const migration = {
 		const objectStore = db.createObjectStore("entries", { keyPath: "id", autoIncrement: true });
 		objectStore.createIndex("start", "start", { unique: false });
 		objectStore.createIndex("xid", "xid", { unique: false });
+	},
+	2: db => {
+		const progressEvent = {};
+		const store = db.transaction(["entries"], "readwrite").objectStore("entries");
+		let prevEntry = null;
+		store.openCursor().onsuccess = function(event) {
+			let cursor = event.target.result;
+			if (cursor) {
+				const entry = cursor.value;
+				if (prevEntry.workout == entry.workout && prevEntry.duration && entry.duration) {
+					entry.xcalc.restdur = moment.duration(entry.start - prevEntry.start).asSeconds() - prevEntry.duration;
+					entry.xcalc.combdur = entry.duration + entry.restdur;
+					delete entry.xcalc.xduration;
+					delete entry.xcalc.tduration;
+				}
+				store.put(entry).onsuccess = _ => {
+					cursor.continue();
+				};
+				++i;
+			}
+		};
 	}
 }
 
@@ -176,8 +197,6 @@ function metricAggregate(metric) {
 		case "restdur": return ["sum", "avg", "max"];
 		case "combdur": return ["sum", "avg", "max"];
 		case "sets": return ["exceptionCount"];
-		case "xsets": return ["max"];
-		case "rsets": return ["max"];
 		case "reps": return ["max", "avg", "sum"];
 		case "workouts": return ["exceptionCount"];
 		case "exercises": return ["exceptionCount"];
@@ -271,6 +290,10 @@ function statsReducer(group) {
 	reducer.value("days")
 		.exception(d => moment(d.start).format("ll"))
 		.exceptionCount(true);
+	reducer.value("rest")
+		.sum(d => d.duration);
+	reducer.value("duration")
+		.sum(d => d.xcalc.restdur);
 	reducer(group);
 }
 
@@ -926,7 +949,7 @@ function showNewEntryModal(xid) {
 	d3.select("#exercise-title")
 		.text(exercise.name)
 		.append("a")
-		.attr("class", "pull-xs-right")
+		.attr("class", "float-xs-right")
 		.html("&#x24D8;")
 		.attr("href", d => "exercise.html?xid=" + xid);
 	
@@ -1006,7 +1029,7 @@ function validate(field, fx=(v => v)) {
 }
 
 function onAnyFilterChange() {
-    let stats = d3.select("#statistics");
+    const stats = d3.select("#statistics");
     stats.selectAll("li").remove();
 
     // statistics
@@ -1021,30 +1044,29 @@ function onAnyFilterChange() {
     // Exercises      6
     // Days           14
 
-    stats
-        .append("li")
-            .attr("class", "list-group-item")
-        .append("span")
-            .text("Exercises")
-        .append("span")
-            .attr("class", "pull-xs-right")
-            .text(allEntriesGroup.value().exercises.exceptionCount);
-    stats
-        .append("li")
-            .attr("class", "list-group-item")
-        .append("span")
-            .text("Workouts")
-        .append("span")
-            .attr("class", "pull-xs-right")
-            .text(allEntriesGroup.value().workouts.exceptionCount);
-    stats
-        .append("li")
-            .attr("class", "list-group-item")
-        .append("span")
-            .text("Days")
-        .append("span")
-            .attr("class", "pull-xs-right")
-            .text(allEntriesGroup.value().days.exceptionCount);
+    let li = stats.append("li")
+    	.attr("class", "list-group-item");
+    li.append("span")
+    	.text("Exercises");
+    li.append("span")
+		.attr("class", "float-xs-right")
+		.text(allEntriesGroup.value().exercises.exceptionCount);
+    
+    li = stats.append("li")
+		.attr("class", "list-group-item")
+	li.append("span")
+        .text("Workouts")
+	li.append("span")
+		.attr("class", "float-xs-right")
+		.text(allEntriesGroup.value().workouts.exceptionCount);
+    
+    li = stats.append("li")
+		.attr("class", "list-group-item")
+	li.append("span")
+		.text("Days")
+	li.append("span")
+		.attr("class", "float-xs-right")
+		.text(allEntriesGroup.value().days.exceptionCount);
 }
 
 function exerciseName(d) {
@@ -1068,6 +1090,7 @@ function dataReady(data) {
 	minDate = moment(d3.min(data, d => d.start)).startOf('day');
 	entries.add(data);
 	updateMetric();
+	onAnyFilterChange();
 	dc.renderAll();
 }
 
@@ -1188,11 +1211,11 @@ let scaleStack = [];
 function updateColorScales() {
 	exerciseChart.colors(extentColorScale(excerciseGroup));
 	dayOfWeekChart.colors(extentColorScale(dayOfWeekGroup));
-	let muscleColorScale = extentColorScale(muscleGroup);
+	const muscleColorScale = extentColorScale(muscleGroup);
 	anteriorDiagram.colors(muscleColorScale);
 	posteriorDiagram.colors(muscleColorScale)
 	muscleBarChart.colors(muscleColorScale);
-	let dateColorScale = extentColorScale(dateGroup);
+	const dateColorScale = extentColorScale(dateGroup);
 	workoutCalendar.colors(dateColorScale);
 	timeChart.colors(dateColorScale);
 }
@@ -1229,10 +1252,6 @@ const repsScale = d3.scale.linear().domain([1, 12]).range([1, 12]).clamp(true);
 const repsDimension = entries.dimension(d => repsScale(d.reps));
 const repsGroup = repsDimension.group();
 
-// Crossfilter: Workout
-metricReducer(dateGroup);
-dateGroup.order(orderGroup);
-
 const workoutDimension = entries.dimension(d => d.workout);
 const setsByWorkout = workoutDimension.group().reduceCount();
 
@@ -1247,7 +1266,8 @@ const setsDimension = {
     filterExact: e => {
 		const wids = new Set();
 		setsByWorkout.all().forEach(d => {
-			if (d.value == e) wids.add(d.key);
+			if (e != 10 && d.value == e) wids.add(d.key);
+			if (d.value >= e) wids.add(d.key);
 		});
 		console.log(wids);
 		workoutDimension.filter(d => wids.has(d));
@@ -1288,6 +1308,16 @@ const dayOfWeek = entries.dimension(d => {
 const dayOfWeekGroup = dayOfWeek.group();
 metricReducer(dayOfWeekGroup);
 dayOfWeekGroup.order(orderGroup);
+
+// Crossfilter: Rest vs Active
+const durationClassGroup = {
+    all: _ => {
+    	return [
+    		{ key: "Rest", value: allEntriesGroup.value().rest.sum },
+    		{ key: "Active", value: allEntriesGroup.value().duration.sum }
+    	];
+    }
+};
 
 const workoutCalendar = dc.calendarGraph("#cal-graph")
     .valueAccessor(curMetricValueAccessor)
@@ -1378,6 +1408,7 @@ const repsChart = dc.barChart("#reps-chart")
 	.renderHorizontalGridLines(true)
     .x(d3.scale.ordinal().domain(d3.range(0, 13, 1)))
 	.title(d => d.value || null)
+	.elasticY(true)
 	.yAxisLabel("sets", 20);
 
 repsChart.xAxis().ticks(5);
@@ -1396,12 +1427,13 @@ const setsChart = dc.barChart("#sets-chart")
 	.colorDomain(colorbrewer.Reds[3])
 	.xUnits(dc.units.ordinal)
 	.renderHorizontalGridLines(true)
-    .x(d3.scale.ordinal().domain(d3.range(0, 13, 1)))
+    .x(d3.scale.ordinal().domain(d3.range(0, 11, 1)))
 	.title(d => d.value || null)
+	.elasticY(true)
 	.yAxisLabel("workouts", 20);
 
 setsChart.xAxis().ticks(5);
-setsChart.xAxis().tickFormat(v => v == 12 ? "12+" : v);
+setsChart.xAxis().tickFormat(v => v == 10 ? "10+" : v);
 setsChart.yAxis()
 	.tickFormat(d3.format("d"))
     .tickSubdivide(0);
@@ -1420,12 +1452,33 @@ const weightsChart = dc.barChart("#weights-chart")
     .xUnits(dc.units.ordinal)
     .renderHorizontalGridLines(true)
     .x(d3.scale.ordinal())
-	.title(d => d.key || null)
-	.yAxisLabel("sets", 20);
+	.title(d => d.key ? `${d.value} sets at ${d.key} lbs` : null)
+	.yAxisLabel("sets", 20)
+	.on('renderlet', chart => {
+		chart.svg()
+			.selectAll("rect.bar")
+            .on("mouseover", function (d) {
+                d3.select("#weights-chart-tip")
+                    .attr("hidden", null)
+                    .html(chart.title()(d.data));
+            })
+            .on("mouseout", function (d) {
+                d3.select("#weights-chart-tip")
+                    .attr("hidden", "true")
+                    .text(null);
+            });
+    });
 
 weightsChart.yAxis()
 	.tickFormat(d3.format("d"))
     .tickSubdivide(0);
+
+const durationPieChart = dc.pieChart("#duration-pie-chart")
+	.height(225)
+	.radius(80)
+	.innerRadius(30)
+	.dimension(dateDimension)
+	.group(durationClassGroup);
 
 function prepareWeightsChart(chart) {
 	const keys = binnedWeightsGroup.all().map(d => d.key);
@@ -1464,7 +1517,7 @@ const muscleBarChart = dc.rowChart("#muscle-bar-chart")
     .label(d => {
         var ex = muscleLookup[d.key]; 
         if (ex != null) {
-            return ex.name
+            return ex.name;
         }
         return d.key
     })
@@ -1548,7 +1601,7 @@ const exerciseListItem = d3.select("#exercise-list")
 
 exerciseListItem.append("a")
 	.attr("href", d => { return "exercise.html?xid=" + d.key })
-	.attr("class", "pull-xs-right")
+	.attr("class", "float-xs-right")
 	.html("&#x24D8;");
 
 exerciseListItem.append("span")

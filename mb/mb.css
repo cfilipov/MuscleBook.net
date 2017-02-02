@@ -68,6 +68,10 @@ a:focus, a:hover {
 	stroke-width: 16px;
 	stroke: black;
 }*/
+li.list-group-item {
+	padding: .5rem .75rem;
+	color: #55595c;
+}
 .dc-chart .y-axis-label {
 	font-size: 0.75rem;
 	fill: #767676;

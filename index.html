@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <!DOCTYPE html>
-<html lang="en" manifest="mb.manifest">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -94,8 +94,6 @@ Main content
 											<option value="restdur">Duration (rest)</option>
 											<option value="combduration">Duration (both)</option>
 											<option value="sets">Sets</option>
-											<option value="xsets">Sets (exercise)</option>
-											<option value="rsets">Sets (reps+weight)</option>
 											<option value="reps">Reps</option>
 											<option value="workouts">Workouts</option>
 											<option value="exercises">Exercises</option>
@@ -195,6 +193,9 @@ Main content
 						</div>
 					</div>
 				</div>
+				<div class="card">
+					<ul id="statistics" class="list-group"></ul>
+				</div>
 			</div>
 
 			<div class="col-xs-12 col-md-8 col-lg-9 px-0">
@@ -209,7 +210,8 @@ Main content
 					<div class="col-xs-12">
 						<div class="card">
 							<div class="card-header">
-								<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+								Timeline
+								<div class="btn-toolbar float-xs-right" role="toolbar" aria-label="Toolbar with button groups">
 									<div class="btn-group btn-group-xs" role="group" aria-label="Second group">
 										<a href="javascript:timeChart.panLeft();" class="btn btn-secondary">
 											<i class="icon ion-ios-arrow-left"></i>
@@ -287,19 +289,6 @@ Main content
 					<div class="col-sm-6">
 						<div class="card">
 							<div class="card-header" style="height: 41px;">
-								Reps
-							</div>
-							<div id="reps-chart" style="position:relative;">								
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:repsChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<div class="col-sm-6">
-						<div class="card">
-							<div class="card-header" style="height: 41px;">
 								Sets
 							</div>
 							<div id="sets-chart" style="position:relative;">								
@@ -310,12 +299,39 @@ Main content
 						</div>
 					</div>
 
+					<div class="col-sm-6">
+						<div class="card">
+							<div class="card-header" style="height: 41px;">
+								Reps
+							</div>
+							<div id="reps-chart" style="position:relative;">								
+								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:repsChart.filterAll();dc.redrawAll();">
+									reset
+								</a>
+							</div>
+						</div>
+					</div>
+
+<!-- 					<div class="col-sm-6">
+						<div class="card">
+							<div class="card-header" style="height: 41px;">
+								Active vs Rest
+							</div>
+							<div id="duration-pie-chart" style="position:relative;">								
+								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:durationPieChart.filterAll();dc.redrawAll();">
+									reset
+								</a>
+							</div>
+						</div>
+					</div> -->
+
 					<div class="col-xs-12">
 						<div class="card">
 							<div class="card-header" style="height: 41px;">
 								Weights
 							</div>
-							<div id="weights-chart" style="position:relative;">								
+							<div id="weights-chart" style="position:relative;">
+								<span id="weights-chart-tip" class="tag tag-info tip" hidden="true"></span>
 								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:weightsChart.filterAll();dc.redrawAll();">
 									reset
 								</a>
