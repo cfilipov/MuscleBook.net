@@ -16,7 +16,7 @@ dc.calendarGraph = function(parent, chartGroup) {
 			addZ(this.getMonth() + 1) + '-' +
 			addZ(this.getDate());
 	}; 
-
+	
 	function makeUTCDate(dateString) {
 		var d = new Date(dateString);
 		return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),  d.getUTCHours(), d.getUTCMinutes());
@@ -92,7 +92,6 @@ dc.calendarGraph = function(parent, chartGroup) {
     };
     
     _chart._doRender = function () {
-        // var numCols = Math.ceil(daysBack / 7);
 		const today = new Date();
 		const squareSize = calculateSquareSize(today);
 		const daysBack = calculateDaysBack(today, squareSize);
@@ -102,15 +101,10 @@ dc.calendarGraph = function(parent, chartGroup) {
 		var col = 0;
 		var month = lastYear.getMonth();
 		var first = true;
-		var yAxisFormatter = d3.time.format("%b");
-
-        // var width = 11 + (numCols * squareSize); // 1 square + 53 squares with 2px padding
-		// var height = 11 + 6 * squareSize; //1 square + 6 squares with 2px padding
-		// var legendX = 20;
-		// var legendY = height + 10;
-		// var viewboxWidth = width + _chart.margins().left + _chart.margins().right;
-		// var viewboxHeight = height + _chart.margins().top + _chart.margins().bottom;
-		// var aspect = viewboxWidth / viewboxHeight;
+		var yAxisFormatter = date => {
+			if (date.getMonth() === 0) return d3.time.format("%Y")(date);
+			else return d3.time.format("%b")(date);
+		};
 
         _chart.resetSvg();
         
@@ -125,12 +119,12 @@ dc.calendarGraph = function(parent, chartGroup) {
 				month = -1;
 				first = !first;
 			}
-			if (c === 0 && date.getMonth() > month){
+			if (c === 0 && date.getMonth() != month){
 				yAxis.push({
 					col: col,
 					month: yAxisFormatter(date)
 				});
-				month++;
+				month = date.getMonth();
 			}
 			calendar.push({
 				date: date,
@@ -185,31 +179,6 @@ dc.calendarGraph = function(parent, chartGroup) {
 				.attr("dx", d => d.col * squareSize)
 				.attr("fill", "#767676")
 				.classed("axis", true);
-        
-        // g.selectAll('.legend')
-		// 		.data(_chart.colors().range())
-		// 		.enter()
-		// 	.append('rect')
-		// 		.attr('class','legend')
-		// 		.attr('width', squareSize - _gap)
-		// 		.attr('height', squareSize - _gap)
-		// 		.attr('x', (d, i) => legendX + i * squareSize + 5)
-		// 		.attr('y', legendY)
-		// 		.attr('fill', d => d);
-
-		// g.append('text')
-		// 	.attr('class','legend')
-		// 	.attr('x', legendX - 35)
-		// 	.attr('y', legendY + 10)
-		// 	.text('Less')
-		// 	.attr('fill','#767676');
-
-		// g.append('text')
-		// 	.attr('class','legend')
-		// 	.attr('x', legendX + _chart.colors().range().length * squareSize + 10)
-		// 	.attr('y', legendY + 10)
-		// 	.text('More')
-		// 	.attr('fill','#767676');
 
         var data = _chart.data();
 		var events = {};
@@ -232,14 +201,14 @@ dc.calendarGraph = function(parent, chartGroup) {
                 d3.select(this)
                     .classed("highlight", true);
                 d3.select(_tipSelector)
-                    .attr("hidden", null)
+                    .style("display", "initial")
                     .html(_chart.title()(entry(d)));
             })
             .on("mouseout", function (d) {
                 d3.select(this)
                     .classed("highlight", false);
                 d3.select(_tipSelector)
-                    .attr("hidden", "true")
+                    .style("display", "none")
                     .text(null);
             });
 

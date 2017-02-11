@@ -18,1306 +18,340 @@ along with MuscleBook.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="viewport" content="width=device-width, user-scalable=no">
-    <meta name="format-detection" content="telephone=no">
+	<meta name="viewport" content="width=device-width, user-scalable=no">
+	<meta name="format-detection" content="telephone=no">
 	<meta name="author" content="Cristian Filipov">
-    <link rel="stylesheet" type="text/css" href="lib/bootstrap-flex.min.css">
-    <link rel="stylesheet" type="text/css" href="lib/dc.css">
-	<link rel="stylesheet" type="text/css" href="lib/ionicons.css">
-    <link rel="stylesheet" type="text/css" href="mb/mb.css">
+	<link rel="stylesheet" type="text/css" href="semantic/dist/semantic.min.css">
+	<link rel="stylesheet" type="text/css" href="lib/dc.css">
+	<link rel="stylesheet" type="text/css" href="mb/mb.css">
 	<link rel="apple-touch-icon" href="Icon512.png" />
 	<link rel="icon" type="image/png" href="Icon512.png" />
 	<title>Muscle Book</title>
 </head>
+
 <body>
-<!-- 
-Navigation
--->
-<nav class="navbar navbar-dark bg-inverse navbar-full navbar-fixed-top">
-  <ul class="nav navbar-nav">
-    <li class="nav-item dropdown">
-      <a class="nav-link dropdown-toggle" href="http://example.com" id="supportedContentDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding-bottom: 0; padding-top: 0;">&#9776;</a>
-      <div class="dropdown-menu" aria-labelledby="supportedContentDropdown">
-			<button type="button" class="dropdown-item" data-toggle="modal" data-backdrop="static" data-target="#select-exercise-modal">Add Set</button>
-			<button type="button" class="dropdown-item demo-hidden" data-backdrop="static" data-toggle="modal" data-target="#import-data-modal">Import</button>
-			<button type="button" class="dropdown-item demo-hidden" data-backdrop="static" onclick="exportJSON();" download>Export</button>
-			<button type="button" class="dropdown-item" data-toggle="modal" data-target="#about-modal">About</button>
-			<div class="dropdown-divider"></div>
-			<button type="button" class="dropdown-item" data-toggle="modal" data-backdrop="static" data-target="#debug-options-modal">Debug</button>
-      </div>
-    </li>
-  </ul>
-</nav>
-<span class="demo-show tag tag-danger" style="color:#fefefe; font-weight:bold; font-size: 1rem; position: fixed; top: 55px; right: 10px; z-index: 1000; opacity: 90%;" hidden="true">SAMPLE DATA</span>
-<div class="debug-only tag tag-default" style="position: fixed; top: 55px; left: 10px; z-index: 1000; opacity: 90%;">
-	<span class="card-text hidden-sm-up">xs</span>
-	<span class="card-text hidden-xs-down hidden-md-up">sm</span>
-	<span class="card-text hidden-sm-down hidden-lg-up">md</span>
-	<span class="card-text hidden-md-down hidden-xl-up visible">lg</span>
-	<span class="card-text hidden-lg-down visible">xl</span>
+
+<div class="ui top fixed inverted borderless menu">
+	<a class="item toggle sidebar"><i class="sidebar icon"></i></a>
 </div>
-<!-- 
-Main content
--->
-<div class="scrollable">
-	<div class="container">
-		<div class="row mx-0">
-			<div class="col-xs-12 col-md-4 col-lg-3">
-				<div class="card">
-					<div class="card-block row anatomy" style="position:relative;">
-						<div id="anatomy-diagram-left" class="col-xs-6"></div>
-						<div id="anatomy-diagram-right" class="col-xs-6"></div>
-						<span id="anatomy-tip" class="tag tag-info tip" hidden="true"></span>
-						<div class="no-padding full-bleed">
-							<form>
-								<div class="list-group entry-inputs">
-									<div class="input-group">
-										<span class="input-group-addon">Start</span>
-										<input class="form-control no-left-border text-xs-right" type="date" id="start-date-input" style="padding: 0 0.75rem 0 0; width: 50%;" required>
-									</div>
-									<div id="time-input-container" class="input-group">
-										<span class="input-group-addon no-left-border">End</span>
-										<input class="form-control no-left-border text-xs-right" type="date" id="end-date-input" style="padding: 0 0.75rem 0 0; width: 50%;" required>
-									</div>
-									<div class="input-group">
-										<select class="form-control custom-select no-left-border" onchange="metricChanged(event);">
-											<option value="intensity" selected>Intensity</option>
-											<option value="weight">Weight</option>
-											<option value="volume">Volume</option>
-											<option value="activedur">Duration (active)</option>
-											<option value="restdur">Duration (rest)</option>
-											<option value="combduration">Duration (both)</option>
-											<option value="sets">Sets</option>
-											<option value="reps">Reps</option>
-											<option value="workouts">Workouts</option>
-											<option value="exercises">Exercises</option>
-										</select>
-									</div>
-									<div class="input-group">
-										<select id="aggregation" class="form-control custom-select no-left-border" onchange="aggregationChanged(event);">
-											<option value="max" selected>Max</option>
-											<option value="avg">Avg.</option>
-											<option value="count">Count</option>
-											<option value="sum">Total</option>
-										</select>
-									</div>
-									<div class="input-group">
-										<div class="input-group-btn full-bleed">
-											<button class="btn btn-secondary dropdown-toggle no-left-border text-xs-left full-bleed input-group-addon right-caret" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-												Personal Records
-											</button>
-											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-												<div class="list-group">
-													<div class="input-group">
-														<span class="form-control no-left-border no-bottom-border no-top-border">Weight</span>
-														<span class="input-group-addon no-left-border no-top-border">
-															<input type="checkbox" name="pr-filter" value="weight" onclick="prFilterChanged(event);">
-														</span>
-													</div>
-													<div class="input-group">
-														<span class="form-control no-left-border">Volume</span>
-														<span class="input-group-addon no-left-border">
-															<input type="checkbox" name="pr-filter" value="volume" onclick="prFilterChanged(event);">
-														</span>
-													</div>
-													<div class="input-group">
-														<span class="form-control no-left-border">Sets</span>
-														<span class="input-group-addon no-left-border">
-															<input type="checkbox" name="pr-filter" value="sets" onclick="prFilterChanged(event);">
-														</span>
-													</div>
-													<div class="input-group">
-														<span class="form-control no-left-border no-bottom-border">Reps</span>
-														<span class="input-group-addon no-left-border no-bottom-border">
-															<input type="checkbox" name="pr-filter" value="reps" onclick="prFilterChanged(event);">
-														</span>
-													</div>
-													<div class="input-group">
-														<span class="form-control no-left-border no-bottom-border">First</span>
-														<span class="input-group-addon no-left-border no-bottom-border">
-															<input type="checkbox" name="pr-filter" value="first" onclick="prFilterChanged(event);">
-														</span>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="input-group">
-										<div class="input-group-btn full-bleed">
-											<button class="btn btn-secondary dropdown-toggle no-left-border text-xs-left full-bleed input-group-addon right-caret bottom-rounded-border-sm-up" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >
-												Muscle Roles
-											</button>
-											<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="width: 220px !important; opacity: 0.9;">
-												<div class="list-group">
-													<div class="input-group">
-														<span class="form-control no-left-border no-bottom-border no-top-border">Target</span>
-														<span class="input-group-addon no-left-border no-top-border">
-															<input type="checkbox" checked="checked">
-														</span>
-													</div>
-													<div class="input-group">
-														<span class="form-control no-left-border">Synergists</span>
-														<span class="input-group-addon no-left-border">
-															<input type="checkbox"  checked="checked">
-														</span>
-													</div>
-													<div class="input-group">
-														<span class="form-control no-left-border">Stabilizers</span>
-														<span class="input-group-addon no-left-border">
-															<input type="checkbox" checked="checked">
-														</span>
-													</div>
-													<div class="input-group">
-														<span class="form-control no-left-border no-bottom-border">Dynamic Stabilizers</span>
-														<span class="input-group-addon no-left-border no-bottom-border">
-															<input type="checkbox" checked="checked">
-														</span>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</form>
-							<div class="btn-group btn-group-xs top-right" role="group" aria-label="Second group">
-								<a id="reset-muscle" style="display: none; font-size: 24px; margin: -6px 0 -0 0; color: #d9534f;" href="javascript:muscleBarChart.filterAll();dc.redrawAll();">
-									<i class="icon ion-ios-refresh"></i>
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="card">
-					<ul id="statistics" class="list-group"></ul>
-				</div>
-			</div>
-
-			<div class="col-xs-12 col-md-8 col-lg-9 px-0">
-				<div class="row mx-0">
-					<div class="col-xs-12">
-						<div class="card">
-							<span id="cal-tip" class="tag tag-info tip" hidden="true"></span>
-							<div id="cal-graph"></div>
-						</div>
-					</div>
-
-					<div class="col-xs-12">
-						<div class="card">
-							<div class="card-header">
-								Timeline
-								<div class="btn-toolbar float-xs-right" role="toolbar" aria-label="Toolbar with button groups">
-									<div class="btn-group btn-group-xs" role="group" aria-label="Second group">
-										<a href="javascript:timeChart.panLeft();" class="btn btn-secondary">
-											<i class="icon ion-ios-arrow-left"></i>
-										</a>
-										<a href="javascript:timeChart.panRight();" class="btn btn-secondary">
-											<i class="icon ion-ios-arrow-right"></i>
-										</a>
-									</div>
-									<div class="btn-group btn-group-xs" role="group" aria-label="First group">
-										<a href="javascript:timeChart.zoomOut();" class="btn btn-secondary">
-											<i class="icon ion-ios-minus-empty"></i>
-										</a>
-										<a href="javascript:timeChart.zoomIn();" class="btn btn-secondary">
-											<i class="icon ion-ios-plus-empty"></i>
-										</a>
-									</div>
-									<div class="btn-group btn-group-xs" role="group" aria-label="First group">
-										<button type="button" class="btn btn-secondary active" data-toggle="button" aria-pressed="true" autocomplete="off" onclick="toggleBrush(event);">
-											<i class="icon ion-ios-barcode-outline"></i>
-										</button>
-									</div>
-								</div>
-							</div>
-							<div id="time-chart" style="position:relative;">
-								<span id="time-chart-tip" class="tag tag-info tip" hidden="true"></span>
-								<a id="reset-date-range" class="top-right tag tag-pill tag-danger" style="display: none;" href="javascript:resetDateRangeFilter();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-
-
-				<div class="row mx-0">
-					<div class="col-sm-6 col-xl-4">
-						<div class="card">
-							<div class="card-header" style="height: 41px;">
-								Day of week
-							</div>
-							<div id="day-of-week-chart" class="no-axis" style="position:relative;">
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:dayOfWeekChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<div class="col-sm-6 col-xl-4">
-						<div class="card">
-							<div class="card-header" style="height: 41px;">
-								Muscles
-							</div>
-							<div id="muscle-bar-chart" class="no-axis" style="position:relative;">
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:muscleBarChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<div class="col-sm-6 col-xl-4">
-						<div class="card no-axis">
-							<div class="card-header" style="height: 41px;">
-								Exercises
-							</div>
-							<div id="exercise-chart" class="no-axis" style="position:relative;">								
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:exerciseChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<div class="col-sm-6">
-						<div class="card">
-							<div class="card-header" style="height: 41px;">
-								Sets
-							</div>
-							<div id="sets-chart" style="position:relative;">								
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:setsChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<div class="col-sm-6">
-						<div class="card">
-							<div class="card-header" style="height: 41px;">
-								Reps
-							</div>
-							<div id="reps-chart" style="position:relative;">								
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:repsChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-
-<!-- 					<div class="col-sm-6">
-						<div class="card">
-							<div class="card-header" style="height: 41px;">
-								Active vs Rest
-							</div>
-							<div id="duration-pie-chart" style="position:relative;">								
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:durationPieChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div> -->
-
-					<div class="col-xs-12">
-						<div class="card">
-							<div class="card-header" style="height: 41px;">
-								Weights
-							</div>
-							<div id="weights-chart" style="position:relative;">
-								<span id="weights-chart-tip" class="tag tag-info tip" hidden="true"></span>
-								<a style="display: none; opacity: 80%;" class="reset tag tag-pill tag-danger top-right" href="javascript:weightsChart.filterAll();dc.redrawAll();">
-									reset
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="row mx-0">
-					<div class="col-sm-12">
-						<!--<div class="card">-->
-							<!--<div class="card-block no-padding-xs-dn">-->
-								<div class="table-responsive" style="margin-top: 1rem;">
-									<table id="data-table" class="table table-hover table-sm"></table>
-								</div>
-							<!--</div>-->
-						<!--</div>-->
-					</div>
-				</div>
-			</div>
-
+<div class="ui vertical left visible sidebar menu">
+	<div class="header item">Muscle Book</div>
+	<div class="item">
+		<div class="ui labeled transparent input row">
+			<input type="date" value="8/4/2016" required>
 		</div>
-<!--
-End scrollable
-End container
--->
-</div>
-</div>
-<!-- 
-Modal: select exercises
- -->
-<div class="modal fade" id="select-exercise-modal">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-				<h4 class="modal-title">Select Exercise</h4>
-			</div>
-			<div id="exercise-list-container" class="modal-body no-padding">
-				<ul class="list-group">
-					<li class="list-group-item"><input class="search form-control" placeholder="Search" /></li>
-				</ul>
-				<ul id="exercise-list" class="list list-group"></ul>
-			</div>
-			<div class="modal-footer"></div>
+		<div class="ui horizontal divider">
+			TO
+		</div>
+		<div class="ui labeled transparent input row">
+			<input type="date" value="8/11/2016" required>
 		</div>
 	</div>
-</div>
-<!-- 
-Modal: new entry
- -->
-<div class="modal fade" id="newentry-modal">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-				<h4 class="modal-title">New Set</h4>
+	<div class="item">
+		<div class="metric ui fluid inline dropdown">
+			<div class="text">
+			Intensity
 			</div>
-			<div class="modal-body no-padding">
-				<div id="exercise-title" class="card-header"></div>
-				<form>
-					<div class="list-group entry-inputs">
-						<div class="input-group">
-							<span class="input-group-addon">Date</span>
-							<input class="form-control no-left-border text-xs-right" type="date" id="date-input" required>
-						</div>
-						<div id="time-input-container" class="input-group">
-							<span class="input-group-addon no-left-border">Time</span>
-							<input class="form-control no-left-border text-xs-right" type="time" id="time-input" required>
-						</div>
-						<div class="input-group">
-							<span class="input-group-addon">Duration</span>
-							<input class="form-control no-left-border text-xs-right stopwatch-display" type="text" id="duration-input">
-							<span class="input-group-btn">
-                            <button class="btn btn-secondary stopwatch-toggle" type="button" style="width: 3.5rem;">&#9658;</button>
-                        </span>
-						</div>
-						<div id="entry-input-opt-weight" class="input-group opt">
-							<span class="input-group-addon">Weight</span>
-							<input class="form-control no-left-border text-xs-right" type="number" id="weight-input">
-						</div>
-						<div id="entry-input-opt-reps" class="input-group opt">
-							<span class="input-group-addon">Reps</span>
-							<input class="form-control no-left-border text-xs-right" type="number" pattern="[0-9]*" id="reps-input">
-						</div>
-						<div id="entry-input-opt-assistance" class="input-group opt">
-							<span class="input-group-addon">Assistance weight</span>
-							<input class="form-control no-left-border text-xs-right" type="number" id="reps-input">
-						</div>
-						<div id="entry-input-opt-bodyweight" class="input-group opt">
-							<span class="input-group-addon">Body weight</span>
-							<input class="form-control no-left-border text-xs-right" type="number" id="reps-input">
-						</div>
-						<div class="input-group">
-							<span class="input-group-addon">Warmup</span>
-							<span class="form-control no-left-border">&#12288;</span>
-							<span class="input-group-addon no-left-border">
-                            <input type="checkbox" id="warmup-input">
-                        </span>
-						</div>
-						<div class="input-group">
-							<span class="input-group-addon">Failure</span>
-							<span class="form-control no-left-border">&#12288;</span>
-							<span class="input-group-addon no-left-border">
-                            <input type="checkbox" id="failure-imput">
-                        </span>
-						</div>
-					</div>
-					<div class="card-block collapse">
-						<div id="import-error-container" class="alert alert-danger" role="alert">
-							<strong>Error:</strong> Missing field.
-						</div>
-					</div>
-				</form>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-primary" onclick="saveEntry();">Save</button>
+			<i class="dropdown icon"></i>
+			<div class="menu">
+				<div class="item" data-value="Intensity">Intensity</div>
+				<div class="item" data-value="Volume">Volume</div>
+				<div class="item" data-value="Weight">Weight</div>
+				<div class="item" data-value="Active Duration">Duration (active)</div>
+				<div class="item" data-value="Rest Duration">Duration (rest)</div>
+				<div class="item" data-value="Total Duration">Duration (both)</div>
+				<div class="item" data-value="Sets">Sets</div>
+				<div class="item" data-value="Reps">Reps</div>
+				<div class="item" data-value="Workouts">Workouts</div>
+				<div class="item" data-value="Exercises">Exercises</div>
 			</div>
 		</div>
 	</div>
-</div>
-<!-- 
-Modal: import data
- -->
-<div class="modal fade" id="import-data-modal">
-	<div class="modal-dialog modal-sm" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-				<h4 class="modal-title">Import Data</h4>
+	<div class="item">
+		<div class="aggregation ui fluid inline dropdown">
+			<div class="text">
+			Max
 			</div>
-			<div class="modal-body">
-				<form>
-					<div class="replace-on-import">
-						<div class="form-group has-danger collapse in">
-							<label for="exampleInputFile">Select a CSV file to import</label>
-							<input type="file" class="form-control-file" aria-describedby="fileHelp" onchange="onImportFileSelect(event)">
-							<small id="fileHelp" class="form-text text-muted">Import may take a while, please be patient.</small>
-						</div>
-						<div id="import-button-container" class="collapse">
-							<button id="import-button" type="button" class="btn btn-block btn-primary" onclick="importSelectedFile(event)">Import</button>
+			<i class="dropdown icon"></i>
+			<div class="menu">
+				<div class="item" data-value="Max">Max</div>
+				<div class="item" data-value="Sum">Sum</div>
+				<div class="item" data-value="Average">Average</div>
+				<div class="item" data-value="Count">Count</div>
+			</div>
+		</div>
+	</div>
+	<div class="item">
+		<div class="ui fluid multiple inline dropdown no-padding">
+		<input type="hidden" name="filters">
+		<i class="filter icon"></i>
+		Personal Records
+		<div class="text no-margin"></div>
+		<div class="menu">
+			<div class="scrolling menu">
+				<div class="item" data-value="important">Weight</div>
+				<div class="item" data-value="announcement">Reps</div>
+				<div class="item" data-value="cannotfix">Sets</div>
+				<div class="item" data-value="news">Duration</div>
+				<div class="item" data-value="enhancement">Volume</div>
+				<div class="item" data-value="off-topic">First</div>
+			</div>
+		</div>
+		</div>
+	</div>
+	<div class="item">
+		<div class="ui fluid multiple inline dropdown no-padding">
+		<input type="hidden" name="filters">
+		<i class="filter icon"></i>
+		Muscle Roles
+		<div class="text no-margin"></div>
+		<div class="menu">
+			<div class="scrolling menu">
+				<div class="item" data-value="important">Target</div>
+				<div class="item" data-value="announcement">Synergists</div>
+				<div class="item" data-value="cannotfix">Stabilizers</div>
+				<div class="item" data-value="news">Dynamic Stabilizers</div>
+			</div>
+		</div>
+		</div>
+	</div>
+	<div class="item">
+		<div class="muscle ui multiple dropdown no-padding">
+			<input type="hidden" name="filters">
+			<i class="filter icon"></i> Muscles
+			<span class="text no-margin"></span>
+			<div class="menu">
+				<div class="ui icon search input">
+					<i class="search icon"></i>
+					<input type="text" placeholder="Search muscles...">
+				</div>
+				<div class="scrolling menu"></div>
+			</div>
+		</div>
+	</div>
+	<div class="item">
+		<div class="ui exercise multiple dropdown no-padding">
+			<input type="hidden" name="filters">
+			<i class="filter icon"></i>
+			Exercises
+			<span class="text no-margin"></span>
+			<div class="menu">
+				<div class="ui icon search input">
+					<i class="search icon"></i>
+					<input type="text" placeholder="Search exercises...">
+				</div>
+				<div class="scrolling menu" style="max-width: 230px;"></div>
+			</div>
+		</div>
+	</div>
+	<a class="item" href="javascript:dc.filterAll();mb.component.renderAll();">Reset All Filters</a>
+</div>
+<div class="ui bottom fixed menu status-text" style="display: none;"></div>
+<div class="pusher right">
+	<div class="ui stackable grid dashboard">
+
+		<div class="sixteen wide column">
+			<div class="ui card fluid dashboard-item">
+				<div class="content workout-calendar" style="height: 120px;"></div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="ui card dashboard-item full-width-mobile" style="width: 320px;">
+				<div class="ui two column centered grid">
+					<div class="column anatomy left"></div>
+					<div class="column anatomy right"></div>
+				</div>
+			</div>
+			<div class="ui card dashboard-item" style="flex: 1 0 auto; ">
+				<div class="ui middle aligned doubling five column centered grid content">
+					<div class="ui center aligned column">
+						<div class="ui fluid card">
+							<h2 class="ui header">
+								Rest vs Active
+								<div class="sub header">10%</div>
+							</h2>
 						</div>
 					</div>
-				</form>
-			</div>
-			<div class="modal-footer"></div>
-		</div>
-	</div>
-</div>
-<!-- 
-Modal: debug options
- -->
-<div class="modal fade" id="debug-options-modal">
-	<div class="modal-dialog modal-sm" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-				<h4 class="modal-title">Debug Options</h4>
-			</div>
-			<div class="modal-body">
-				<button id="delete-all-entries-button" type="button" class="btn btn-block btn-danger" onclick="deleteAllEntries()">Delete Database</button>
-				<button id="calculate-all-button" type="button" class="btn btn-block btn-danger" onclick="recalculateAllEntriesWithProgress()">Recalculate All</button>
-			</div>
-			<div class="modal-footer"></div>
-		</div>
-	</div>
-</div>
-<!-- 
-Modal: exercise details
- -->
-<div class="modal fade" id="exercise-detail-modal">
-	<div class="modal-dialog modal-sm" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-				<h4 class="modal-title"></h4>
-			</div>
-			<div class="modal-body">
-				<div class="container">
-					<div class="row">
-						<div class="col-sm-6 col-lg-4">
-							<div class="card">
-								<div id="exercise-title" class="card-header"></div>
-								<ul id="exercise-properties-list" class="list-group"></ul>
-								<div class="card-block row anatomy">
-									<div id="anatomy-diagram-left" class="col-xs-6"></div>
-									<div id="anatomy-diagram-right" class="col-xs-6"></div>
-								</div>
-							</div>
+					<div class="ui center aligned column">
+						<div class="ui fluid card">
+							<h2 class="ui header">
+								Push vs Pull
+								<div class="sub header">10%</div>
+							</h2>
 						</div>
-						<div class="col-sm-6 col-lg-4">
-							<div class="card">
-								<div id="anatomy-diagram-legend-container"></div>
-							</div>
+					</div>
+					<div class="ui center aligned column">
+						<div class="ui fluid card">
+							<h2 class="ui header">
+								Isolation vs Compound
+								<div class="sub header">10%</div>
+							</h2>
+						</div>
+					</div>
+					<div class="ui center aligned column">
+						<div class="ui fluid card">
+							<h2 class="ui header">
+								Intensity
+								<div class="sub header">10%</div>
+							</h2>
+						</div>
+					</div>
+					<div class="ui center aligned column">
+						<div class="ui fluid card">
+							<h2 class="ui header">
+								Volume
+								<div class="sub header">10%</div>
+							</h2>
+						</div>
+					</div>
+			</div>
+		</div>
+
+		<div class="sixteen wide column">
+			<div class="ui fluid card dashboard-item">
+				<div class="ui top attached secondary pointing menu">
+					<a class="active item">Days</a>
+					<a class="item">Weeks</a>
+					<a class="item">Months</a>
+					<a class="item">Years</a>
+				</div>
+				<div class="time chart content" style="height: 197px; position: relative;">
+					<a class="reset ui circular red compact mini icon button top-right" style="display: none; opacity: 50%;" href="javascript:timelineChart.filterAll();dc.redrawAll();">
+						<i class="undo icon"></i>
+					</a>
+				</div>
+				<div class="ui bottom attached mini icon menu">
+					<a class="icon item" href="javascript:timelineChart.panLeft();"><i class="left chevron icon"></i></a>
+					<a class="icon item" href="javascript:timelineChart.panRight();"><i class="right chevron icon"></i></a>
+					<a class="icon item" href="javascript:timelineChart.zoomOut();"><i class="minus icon"></i></a>
+					<a class="icon item" href="javascript:timelineChart.zoomIn();"><i class="plus icon"></i></a>
+					<a class="icon item" href="javascript:timelineChart.toggleBrush();"><i class="barcode icon"></i></a>
+				</div>
+			</div>
+		</div>
+
+		<div class="eight wide column">
+			<div class="ui fluid card dashboard-item">
+				<div class="sets chart content" style="height: 180px;">
+					<div class="ui mini top left attached label">Sets</div>
+					<div style="margin-top: 0 !important;"></div>
+					<a class="reset ui circular red compact mini icon button top-right" style="display: none; opacity: 50%;" href="javascript:setsChart.filterAll();dc.redrawAll();">
+						<i class="undo icon"></i>
+					</a>
+				</div>
+			</div>
+		</div>
+		
+		<div class="eight wide column">
+			<div class="ui fluid card dashboard-item">
+				<div class="reps chart content" style="height: 180px;">
+					<div class="ui mini top left attached label">Reps</div>
+					<div style="margin-top: 0 !important;"></div>
+					<a class="reset ui circular red compact mini icon button top-right" style="display: none; opacity: 50%;" href="javascript:repsChart.filterAll();dc.redrawAll();">
+						<i class="undo icon"></i>
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="sixteen wide column">
+			<div class="ui fluid card dashboard-item">
+				<div class="weight chart content" style="height: 180px;">
+					<div class="ui mini top left attached label">Weight</div>
+					<div style="margin-top: 0 !important;"></div>
+					<a class="reset ui circular red compact mini icon button top-right" style="display: none; opacity: 50%;" href="javascript:weightChart.filterAll();dc.redrawAll();">
+						<i class="undo icon"></i>
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="sixteen wide column">
+			<div class="ui segment dashboard-item">
+				<div class="stats ui doubling nine column centered grid">
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">31,200</div>
+							<div class="label">lbs</div>
+						</div>
+					</div>
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">200</div>
+							<div class="label">lbs max</div>
+						</div>
+					</div>
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">22</div>
+							<div class="label">Workouts</div>
+						</div>
+					</div>
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">500</div>
+							<div class="label">Reps</div>
+						</div>
+					</div>
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">130</div>
+							<div class="label">Sets</div>
+						</div>
+					</div>
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">8</div>
+							<div class="label">exercises</div>
+						</div>
+					</div>
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">5</div>
+							<div class="label">Days</div>
+						</div>
+					</div>
+					<div class="ui column small center aligned">
+						<div class="ui tiny statistic">
+							<div class="value">3</div>
+							<div class="label">PRs</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div class="modal-footer"></div>
+		</div>
+
+		<div class="ui sixteen wide column dashboard-item">
+			<div class="ui secondary pointing menu">
+				<a class="active item">
+					Workouts
+				</a>
+				<a class="item">
+					Muscles
+				</a>
+				<a class="item">
+					Exercises
+				</a>
+				<a class="item">
+					Weekdays
+				</a>
+			</div>
+			<div class="entry-data-table" style="width: 100%;"></div>
 		</div>
 	</div>
 </div>
-<!-- 
-Modal: about
- -->
-<div class="modal fade" id="about-modal">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-				<h4 class="modal-title">About Muscle Book</h4>
-			</div>
-			<div class="modal-body">
-				<h5><a href="https://github.com/cfilipov/MuscleBook.net">GitHub Project Page<a></h5>
-				<br />
-				<p>Copyright (C) 2016  Cristian Filipov</p>
-				<br />
-				<p>MuscleBook is free software: you can redistribute it and/or modify
-				it under the terms of the GNU Affero General Public License as published by
-				the Free Software Foundation, either version 3 of the License, or
-				(at your option) any later version.</p>
-				<br />
-				<p>MuscleBook is distributed in the hope that it will be useful,
-				but WITHOUT ANY WARRANTY; without even the implied warranty of
-				MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-				GNU Affero General Public License for more details.</p>				
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss-target="#about-modal" data-target="#credits-modal" onclick="dismissAndShow(event);">Credits</button>
-				<button type="button" class="btn btn-secondary" data-dismiss-target="#about-modal" data-target="#license-modal" onclick="dismissAndShow(event);">View Full License</button>
-			</div>
-		</div>
-	</div>
-</div>
-<!-- 
-Modal: credits
- -->
-<div class="modal fade" id="credits-modal">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-				<h4 class="modal-title">Credits</h4>
-			</div>
-			<div class="modal-body no-padding">
-				<ul class="list-group">
-					<li class="list-group-item">
-						<span><a href="https://github.com/cfilipov">Cristian Filipov</a></span>
-						<span class="pull-xs-right">Author</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://predator5791.deviantart.com/art/Interactive-Muscular-Anatomy-145463634">Daniel Gomez</a></span>
-						<span class="pull-xs-right">Anatomy Artwork</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://sig.biostr.washington.edu/projects/fm/AboutFM.html">Foundational Model of Anatomy (FMA)</a></span>
-						<span class="pull-xs-right">Anatomy Data</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://getbootstrap.com/">Bootstrap</a></span>
-						<span class="pull-xs-right">Front-end framework</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="https://jquery.com/">jQuery</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="https://d3js.org">d3</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="https://dc-js.github.io/dc.js/">dc.js</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://crossfilter.github.io/crossfilter/">crossfilter</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="https://github.com/crossfilter/reductio">reductio</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://momentjs.com/">moment.js</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://colorbrewer2.org/">colorbrewer2</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="https://github.com/lazd/iNoBounce">iNoBounce</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="https://github.com/ftlabs/fastclick">fastclick</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://www.listjs.com/">list.js</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://danml.com/download.html">doanload.js</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-					<li class="list-group-item">
-						<span><a href="http://tether.io/">tether</a></span>
-						<span class="pull-xs-right">Javascript library</span>
-					</li>
-				</ul>	
-			</div>
-			<div class="modal-footer"></div>
-		</div>
-	</div>
-</div>
-<!-- 
-Modal: license
- -->
-<div class="modal fade" id="license-modal">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-				<h3 style="text-align: center;">GNU AFFERO GENERAL PUBLIC LICENSE</h3>
-				<p style="text-align: center;">Version 3, 19 November 2007</p>
-			</div>
-			<div class="modal-body">
-				<p>Copyright &copy; 2007 Free Software Foundation,
-				Inc. &lt;<a href="http://fsf.org/">http://fsf.org/</a>&gt;
-				<br />
-				Everyone is permitted to copy and distribute verbatim copies
-				of this license document, but changing it is not allowed.</p>
 
-				<h3><a name="preamble"></a>Preamble</h3>
-
-				<p>The GNU Affero General Public License is a free, copyleft license
-				for software and other kinds of works, specifically designed to ensure
-				cooperation with the community in the case of network server software.</p>
-
-				<p>The licenses for most software and other practical works are
-				designed to take away your freedom to share and change the works.  By
-				contrast, our General Public Licenses are intended to guarantee your
-				freedom to share and change all versions of a program--to make sure it
-				remains free software for all its users.</p>
-
-				<p>When we speak of free software, we are referring to freedom, not
-				price.  Our General Public Licenses are designed to make sure that you
-				have the freedom to distribute copies of free software (and charge for
-				them if you wish), that you receive source code or can get it if you
-				want it, that you can change the software or use pieces of it in new
-				free programs, and that you know you can do these things.</p>
-
-				<p>Developers that use our General Public Licenses protect your rights
-				with two steps: (1) assert copyright on the software, and (2) offer
-				you this License which gives you legal permission to copy, distribute
-				and/or modify the software.</p>
-
-				<p>A secondary benefit of defending all users' freedom is that
-				improvements made in alternate versions of the program, if they
-				receive widespread use, become available for other developers to
-				incorporate.  Many developers of free software are heartened and
-				encouraged by the resulting cooperation.  However, in the case of
-				software used on network servers, this result may fail to come about.
-				The GNU General Public License permits making a modified version and
-				letting the public access it on a server without ever releasing its
-				source code to the public.</p>
-
-				<p>The GNU Affero General Public License is designed specifically to
-				ensure that, in such cases, the modified source code becomes available
-				to the community.  It requires the operator of a network server to
-				provide the source code of the modified version running there to the
-				users of that server.  Therefore, public use of a modified version, on
-				a publicly accessible server, gives the public access to the source
-				code of the modified version.</p>
-
-				<p>An older license, called the Affero General Public License and
-				published by Affero, was designed to accomplish similar goals.  This is
-				a different license, not a version of the Affero GPL, but Affero has
-				released a new version of the Affero GPL which permits relicensing under
-				this license.</p>
-
-				<p>The precise terms and conditions for copying, distribution and
-				modification follow.</p>
-
-				<h3><a name="terms"></a>TERMS AND CONDITIONS</h3>
-
-				<h4><a name="section0"></a>0. Definitions.</h4>
-
-				<p>&quot;This License&quot; refers to version 3 of the GNU Affero General Public
-				License.</p>
-
-				<p>&quot;Copyright&quot; also means copyright-like laws that apply to other kinds
-				of works, such as semiconductor masks.</p>
-
-				<p>&quot;The Program&quot; refers to any copyrightable work licensed under this
-				License.  Each licensee is addressed as &quot;you&quot;.  &quot;Licensees&quot; and
-				&quot;recipients&quot; may be individuals or organizations.</p>
-
-				<p>To &quot;modify&quot; a work means to copy from or adapt all or part of the work
-				in a fashion requiring copyright permission, other than the making of an
-				exact copy.  The resulting work is called a &quot;modified version&quot; of the
-				earlier work or a work &quot;based on&quot; the earlier work.</p>
-
-				<p>A &quot;covered work&quot; means either the unmodified Program or a work based
-				on the Program.</p>
-
-				<p>To &quot;propagate&quot; a work means to do anything with it that, without
-				permission, would make you directly or secondarily liable for
-				infringement under applicable copyright law, except executing it on a
-				computer or modifying a private copy.  Propagation includes copying,
-				distribution (with or without modification), making available to the
-				public, and in some countries other activities as well.</p>
-
-				<p>To &quot;convey&quot; a work means any kind of propagation that enables other
-				parties to make or receive copies.  Mere interaction with a user through
-				a computer network, with no transfer of a copy, is not conveying.</p>
-
-				<p>An interactive user interface displays &quot;Appropriate Legal Notices&quot;
-				to the extent that it includes a convenient and prominently visible
-				feature that (1) displays an appropriate copyright notice, and (2)
-				tells the user that there is no warranty for the work (except to the
-				extent that warranties are provided), that licensees may convey the
-				work under this License, and how to view a copy of this License.  If
-				the interface presents a list of user commands or options, such as a
-				menu, a prominent item in the list meets this criterion.</p>
-
-				<h4><a name="section1"></a>1. Source Code.</h4>
-
-				<p>The &quot;source code&quot; for a work means the preferred form of the work
-				for making modifications to it.  &quot;Object code&quot; means any non-source
-				form of a work.</p>
-
-				<p>A &quot;Standard Interface&quot; means an interface that either is an official
-				standard defined by a recognized standards body, or, in the case of
-				interfaces specified for a particular programming language, one that
-				is widely used among developers working in that language.</p>
-
-				<p>The &quot;System Libraries&quot; of an executable work include anything, other
-				than the work as a whole, that (a) is included in the normal form of
-				packaging a Major Component, but which is not part of that Major
-				Component, and (b) serves only to enable use of the work with that
-				Major Component, or to implement a Standard Interface for which an
-				implementation is available to the public in source code form.  A
-				&quot;Major Component&quot;, in this context, means a major essential component
-				(kernel, window system, and so on) of the specific operating system
-				(if any) on which the executable work runs, or a compiler used to
-				produce the work, or an object code interpreter used to run it.</p>
-
-				<p>The &quot;Corresponding Source&quot; for a work in object code form means all
-				the source code needed to generate, install, and (for an executable
-				work) run the object code and to modify the work, including scripts to
-				control those activities.  However, it does not include the work's
-				System Libraries, or general-purpose tools or generally available free
-				programs which are used unmodified in performing those activities but
-				which are not part of the work.  For example, Corresponding Source
-				includes interface definition files associated with source files for
-				the work, and the source code for shared libraries and dynamically
-				linked subprograms that the work is specifically designed to require,
-				such as by intimate data communication or control flow between those
-				subprograms and other parts of the work.</p>
-
-				<p>The Corresponding Source need not include anything that users
-				can regenerate automatically from other parts of the Corresponding
-				Source.</p>
-
-				<p>The Corresponding Source for a work in source code form is that
-				same work.</p>
-
-				<h4><a name="section2"></a>2. Basic Permissions.</h4>
-
-				<p>All rights granted under this License are granted for the term of
-				copyright on the Program, and are irrevocable provided the stated
-				conditions are met.  This License explicitly affirms your unlimited
-				permission to run the unmodified Program.  The output from running a
-				covered work is covered by this License only if the output, given its
-				content, constitutes a covered work.  This License acknowledges your
-				rights of fair use or other equivalent, as provided by copyright law.</p>
-
-				<p>You may make, run and propagate covered works that you do not
-				convey, without conditions so long as your license otherwise remains
-				in force.  You may convey covered works to others for the sole purpose
-				of having them make modifications exclusively for you, or provide you
-				with facilities for running those works, provided that you comply with
-				the terms of this License in conveying all material for which you do
-				not control copyright.  Those thus making or running the covered works
-				for you must do so exclusively on your behalf, under your direction
-				and control, on terms that prohibit them from making any copies of
-				your copyrighted material outside their relationship with you.</p>
-
-				<p>Conveying under any other circumstances is permitted solely under
-				the conditions stated below.  Sublicensing is not allowed; section 10
-				makes it unnecessary.</p>
-
-				<h4><a name="section3"></a>3. Protecting Users' Legal Rights From Anti-Circumvention Law.</h4>
-
-				<p>No covered work shall be deemed part of an effective technological
-				measure under any applicable law fulfilling obligations under article
-				11 of the WIPO copyright treaty adopted on 20 December 1996, or
-				similar laws prohibiting or restricting circumvention of such
-				measures.</p>
-
-				<p>When you convey a covered work, you waive any legal power to forbid
-				circumvention of technological measures to the extent such circumvention
-				is effected by exercising rights under this License with respect to
-				the covered work, and you disclaim any intention to limit operation or
-				modification of the work as a means of enforcing, against the work's
-				users, your or third parties' legal rights to forbid circumvention of
-				technological measures.</p>
-
-				<h4><a name="section4"></a>4. Conveying Verbatim Copies.</h4>
-
-				<p>You may convey verbatim copies of the Program's source code as you
-				receive it, in any medium, provided that you conspicuously and
-				appropriately publish on each copy an appropriate copyright notice;
-				keep intact all notices stating that this License and any
-				non-permissive terms added in accord with section 7 apply to the code;
-				keep intact all notices of the absence of any warranty; and give all
-				recipients a copy of this License along with the Program.</p>
-
-				<p>You may charge any price or no price for each copy that you convey,
-				and you may offer support or warranty protection for a fee.</p>
-
-				<h4><a name="section5"></a>5. Conveying Modified Source Versions.</h4>
-
-				<p>You may convey a work based on the Program, or the modifications to
-				produce it from the Program, in the form of source code under the
-				terms of section 4, provided that you also meet all of these conditions:</p>
-
-				<ul>
-
-				<li>a) The work must carry prominent notices stating that you modified
-					it, and giving a relevant date.</li>
-
-				<li>b) The work must carry prominent notices stating that it is
-					released under this License and any conditions added under section
-					7.  This requirement modifies the requirement in section 4 to
-					&quot;keep intact all notices&quot;.</li>
-
-				<li>c) You must license the entire work, as a whole, under this
-					License to anyone who comes into possession of a copy.  This
-					License will therefore apply, along with any applicable section 7
-					additional terms, to the whole of the work, and all its parts,
-					regardless of how they are packaged.  This License gives no
-					permission to license the work in any other way, but it does not
-					invalidate such permission if you have separately received it.</li>
-
-				<li>d) If the work has interactive user interfaces, each must display
-					Appropriate Legal Notices; however, if the Program has interactive
-					interfaces that do not display Appropriate Legal Notices, your
-					work need not make them do so.</li>
-
-				</ul>
-
-				<p>A compilation of a covered work with other separate and independent
-				works, which are not by their nature extensions of the covered work,
-				and which are not combined with it such as to form a larger program,
-				in or on a volume of a storage or distribution medium, is called an
-				&quot;aggregate&quot; if the compilation and its resulting copyright are not
-				used to limit the access or legal rights of the compilation's users
-				beyond what the individual works permit.  Inclusion of a covered work
-				in an aggregate does not cause this License to apply to the other
-				parts of the aggregate.</p>
-
-				<h4><a name="section6"></a>6. Conveying Non-Source Forms.</h4>
-
-				<p>You may convey a covered work in object code form under the terms
-				of sections 4 and 5, provided that you also convey the
-				machine-readable Corresponding Source under the terms of this License,
-				in one of these ways:</p>
-
-				<ul>
-
-				<li>a) Convey the object code in, or embodied in, a physical product
-					(including a physical distribution medium), accompanied by the
-					Corresponding Source fixed on a durable physical medium
-					customarily used for software interchange.</li>
-
-				<li>b) Convey the object code in, or embodied in, a physical product
-					(including a physical distribution medium), accompanied by a
-					written offer, valid for at least three years and valid for as
-					long as you offer spare parts or customer support for that product
-					model, to give anyone who possesses the object code either (1) a
-					copy of the Corresponding Source for all the software in the
-					product that is covered by this License, on a durable physical
-					medium customarily used for software interchange, for a price no
-					more than your reasonable cost of physically performing this
-					conveying of source, or (2) access to copy the
-					Corresponding Source from a network server at no charge.</li>
-
-				<li>c) Convey individual copies of the object code with a copy of the
-					written offer to provide the Corresponding Source.  This
-					alternative is allowed only occasionally and noncommercially, and
-					only if you received the object code with such an offer, in accord
-					with subsection 6b.</li>
-
-				<li>d) Convey the object code by offering access from a designated
-					place (gratis or for a charge), and offer equivalent access to the
-					Corresponding Source in the same way through the same place at no
-					further charge.  You need not require recipients to copy the
-					Corresponding Source along with the object code.  If the place to
-					copy the object code is a network server, the Corresponding Source
-					may be on a different server (operated by you or a third party)
-					that supports equivalent copying facilities, provided you maintain
-					clear directions next to the object code saying where to find the
-					Corresponding Source.  Regardless of what server hosts the
-					Corresponding Source, you remain obligated to ensure that it is
-					available for as long as needed to satisfy these requirements.</li>
-
-				<li>e) Convey the object code using peer-to-peer transmission, provided
-					you inform other peers where the object code and Corresponding
-					Source of the work are being offered to the general public at no
-					charge under subsection 6d.</li>
-
-				</ul>
-
-				<p>A separable portion of the object code, whose source code is excluded
-				from the Corresponding Source as a System Library, need not be
-				included in conveying the object code work.</p>
-
-				<p>A &quot;User Product&quot; is either (1) a &quot;consumer product&quot;, which means any
-				tangible personal property which is normally used for personal, family,
-				or household purposes, or (2) anything designed or sold for incorporation
-				into a dwelling.  In determining whether a product is a consumer product,
-				doubtful cases shall be resolved in favor of coverage.  For a particular
-				product received by a particular user, &quot;normally used&quot; refers to a
-				typical or common use of that class of product, regardless of the status
-				of the particular user or of the way in which the particular user
-				actually uses, or expects or is expected to use, the product.  A product
-				is a consumer product regardless of whether the product has substantial
-				commercial, industrial or non-consumer uses, unless such uses represent
-				the only significant mode of use of the product.</p>
-
-				<p>&quot;Installation Information&quot; for a User Product means any methods,
-				procedures, authorization keys, or other information required to install
-				and execute modified versions of a covered work in that User Product from
-				a modified version of its Corresponding Source.  The information must
-				suffice to ensure that the continued functioning of the modified object
-				code is in no case prevented or interfered with solely because
-				modification has been made.</p>
-
-				<p>If you convey an object code work under this section in, or with, or
-				specifically for use in, a User Product, and the conveying occurs as
-				part of a transaction in which the right of possession and use of the
-				User Product is transferred to the recipient in perpetuity or for a
-				fixed term (regardless of how the transaction is characterized), the
-				Corresponding Source conveyed under this section must be accompanied
-				by the Installation Information.  But this requirement does not apply
-				if neither you nor any third party retains the ability to install
-				modified object code on the User Product (for example, the work has
-				been installed in ROM).</p>
-
-				<p>The requirement to provide Installation Information does not include a
-				requirement to continue to provide support service, warranty, or updates
-				for a work that has been modified or installed by the recipient, or for
-				the User Product in which it has been modified or installed.  Access to a
-				network may be denied when the modification itself materially and
-				adversely affects the operation of the network or violates the rules and
-				protocols for communication across the network.</p>
-
-				<p>Corresponding Source conveyed, and Installation Information provided,
-				in accord with this section must be in a format that is publicly
-				documented (and with an implementation available to the public in
-				source code form), and must require no special password or key for
-				unpacking, reading or copying.</p>
-
-				<h4><a name="section7"></a>7. Additional Terms.</h4>
-
-				<p>&quot;Additional permissions&quot; are terms that supplement the terms of this
-				License by making exceptions from one or more of its conditions.
-				Additional permissions that are applicable to the entire Program shall
-				be treated as though they were included in this License, to the extent
-				that they are valid under applicable law.  If additional permissions
-				apply only to part of the Program, that part may be used separately
-				under those permissions, but the entire Program remains governed by
-				this License without regard to the additional permissions.</p>
-
-				<p>When you convey a copy of a covered work, you may at your option
-				remove any additional permissions from that copy, or from any part of
-				it.  (Additional permissions may be written to require their own
-				removal in certain cases when you modify the work.)  You may place
-				additional permissions on material, added by you to a covered work,
-				for which you have or can give appropriate copyright permission.</p>
-
-				<p>Notwithstanding any other provision of this License, for material you
-				add to a covered work, you may (if authorized by the copyright holders of
-				that material) supplement the terms of this License with terms:</p>
-
-				<ul>
-
-				<li>a) Disclaiming warranty or limiting liability differently from the
-					terms of sections 15 and 16 of this License; or</li>
-
-				<li>b) Requiring preservation of specified reasonable legal notices or
-					author attributions in that material or in the Appropriate Legal
-					Notices displayed by works containing it; or</li>
-
-				<li>c) Prohibiting misrepresentation of the origin of that material, or
-					requiring that modified versions of such material be marked in
-					reasonable ways as different from the original version; or</li>
-
-				<li>d) Limiting the use for publicity purposes of names of licensors or
-					authors of the material; or</li>
-
-				<li>e) Declining to grant rights under trademark law for use of some
-					trade names, trademarks, or service marks; or</li>
-
-				<li>f) Requiring indemnification of licensors and authors of that
-					material by anyone who conveys the material (or modified versions of
-					it) with contractual assumptions of liability to the recipient, for
-					any liability that these contractual assumptions directly impose on
-					those licensors and authors.</li>
-
-				</ul>
-
-				<p>All other non-permissive additional terms are considered &quot;further
-				restrictions&quot; within the meaning of section 10.  If the Program as you
-				received it, or any part of it, contains a notice stating that it is
-				governed by this License along with a term that is a further restriction,
-				you may remove that term.  If a license document contains a further
-				restriction but permits relicensing or conveying under this License, you
-				may add to a covered work material governed by the terms of that license
-				document, provided that the further restriction does not survive such
-				relicensing or conveying.</p>
-
-				<p>If you add terms to a covered work in accord with this section, you
-				must place, in the relevant source files, a statement of the
-				additional terms that apply to those files, or a notice indicating
-				where to find the applicable terms.</p>
-
-				<p>Additional terms, permissive or non-permissive, may be stated in the
-				form of a separately written license, or stated as exceptions;
-				the above requirements apply either way.</p>
-
-				<h4><a name="section8"></a>8. Termination.</h4>
-
-				<p>You may not propagate or modify a covered work except as expressly
-				provided under this License.  Any attempt otherwise to propagate or
-				modify it is void, and will automatically terminate your rights under
-				this License (including any patent licenses granted under the third
-				paragraph of section 11).</p>
-
-				<p>However, if you cease all violation of this License, then your
-				license from a particular copyright holder is reinstated (a)
-				provisionally, unless and until the copyright holder explicitly and
-				finally terminates your license, and (b) permanently, if the copyright
-				holder fails to notify you of the violation by some reasonable means
-				prior to 60 days after the cessation.</p>
-
-				<p>Moreover, your license from a particular copyright holder is
-				reinstated permanently if the copyright holder notifies you of the
-				violation by some reasonable means, this is the first time you have
-				received notice of violation of this License (for any work) from that
-				copyright holder, and you cure the violation prior to 30 days after
-				your receipt of the notice.</p>
-
-				<p>Termination of your rights under this section does not terminate the
-				licenses of parties who have received copies or rights from you under
-				this License.  If your rights have been terminated and not permanently
-				reinstated, you do not qualify to receive new licenses for the same
-				material under section 10.</p>
-
-				<h4><a name="section9"></a>9. Acceptance Not Required for Having Copies.</h4>
-
-				<p>You are not required to accept this License in order to receive or
-				run a copy of the Program.  Ancillary propagation of a covered work
-				occurring solely as a consequence of using peer-to-peer transmission
-				to receive a copy likewise does not require acceptance.  However,
-				nothing other than this License grants you permission to propagate or
-				modify any covered work.  These actions infringe copyright if you do
-				not accept this License.  Therefore, by modifying or propagating a
-				covered work, you indicate your acceptance of this License to do so.</p>
-
-				<h4><a name="section10"></a>10. Automatic Licensing of Downstream Recipients.</h4>
-
-				<p>Each time you convey a covered work, the recipient automatically
-				receives a license from the original licensors, to run, modify and
-				propagate that work, subject to this License.  You are not responsible
-				for enforcing compliance by third parties with this License.</p>
-
-				<p>An &quot;entity transaction&quot; is a transaction transferring control of an
-				organization, or substantially all assets of one, or subdividing an
-				organization, or merging organizations.  If propagation of a covered
-				work results from an entity transaction, each party to that
-				transaction who receives a copy of the work also receives whatever
-				licenses to the work the party's predecessor in interest had or could
-				give under the previous paragraph, plus a right to possession of the
-				Corresponding Source of the work from the predecessor in interest, if
-				the predecessor has it or can get it with reasonable efforts.</p>
-
-				<p>You may not impose any further restrictions on the exercise of the
-				rights granted or affirmed under this License.  For example, you may
-				not impose a license fee, royalty, or other charge for exercise of
-				rights granted under this License, and you may not initiate litigation
-				(including a cross-claim or counterclaim in a lawsuit) alleging that
-				any patent claim is infringed by making, using, selling, offering for
-				sale, or importing the Program or any portion of it.</p>
-
-				<h4><a name="section11"></a>11. Patents.</h4>
-
-				<p>A &quot;contributor&quot; is a copyright holder who authorizes use under this
-				License of the Program or a work on which the Program is based.  The
-				work thus licensed is called the contributor's &quot;contributor version&quot;.</p>
-
-				<p>A contributor's &quot;essential patent claims&quot; are all patent claims
-				owned or controlled by the contributor, whether already acquired or
-				hereafter acquired, that would be infringed by some manner, permitted
-				by this License, of making, using, or selling its contributor version,
-				but do not include claims that would be infringed only as a
-				consequence of further modification of the contributor version.  For
-				purposes of this definition, &quot;control&quot; includes the right to grant
-				patent sublicenses in a manner consistent with the requirements of
-				this License.</p>
-
-				<p>Each contributor grants you a non-exclusive, worldwide, royalty-free
-				patent license under the contributor's essential patent claims, to
-				make, use, sell, offer for sale, import and otherwise run, modify and
-				propagate the contents of its contributor version.</p>
-
-				<p>In the following three paragraphs, a &quot;patent license&quot; is any express
-				agreement or commitment, however denominated, not to enforce a patent
-				(such as an express permission to practice a patent or covenant not to
-				sue for patent infringement).  To &quot;grant&quot; such a patent license to a
-				party means to make such an agreement or commitment not to enforce a
-				patent against the party.</p>
-
-				<p>If you convey a covered work, knowingly relying on a patent license,
-				and the Corresponding Source of the work is not available for anyone
-				to copy, free of charge and under the terms of this License, through a
-				publicly available network server or other readily accessible means,
-				then you must either (1) cause the Corresponding Source to be so
-				available, or (2) arrange to deprive yourself of the benefit of the
-				patent license for this particular work, or (3) arrange, in a manner
-				consistent with the requirements of this License, to extend the patent
-				license to downstream recipients.  &quot;Knowingly relying&quot; means you have
-				actual knowledge that, but for the patent license, your conveying the
-				covered work in a country, or your recipient's use of the covered work
-				in a country, would infringe one or more identifiable patents in that
-				country that you have reason to believe are valid.</p>
-
-				<p>If, pursuant to or in connection with a single transaction or
-				arrangement, you convey, or propagate by procuring conveyance of, a
-				covered work, and grant a patent license to some of the parties
-				receiving the covered work authorizing them to use, propagate, modify
-				or convey a specific copy of the covered work, then the patent license
-				you grant is automatically extended to all recipients of the covered
-				work and works based on it.</p>
-
-				<p>A patent license is &quot;discriminatory&quot; if it does not include within
-				the scope of its coverage, prohibits the exercise of, or is
-				conditioned on the non-exercise of one or more of the rights that are
-				specifically granted under this License.  You may not convey a covered
-				work if you are a party to an arrangement with a third party that is
-				in the business of distributing software, under which you make payment
-				to the third party based on the extent of your activity of conveying
-				the work, and under which the third party grants, to any of the
-				parties who would receive the covered work from you, a discriminatory
-				patent license (a) in connection with copies of the covered work
-				conveyed by you (or copies made from those copies), or (b) primarily
-				for and in connection with specific products or compilations that
-				contain the covered work, unless you entered into that arrangement,
-				or that patent license was granted, prior to 28 March 2007.</p>
-
-				<p>Nothing in this License shall be construed as excluding or limiting
-				any implied license or other defenses to infringement that may
-				otherwise be available to you under applicable patent law.</p>
-
-				<h4><a name="section12"></a>12. No Surrender of Others' Freedom.</h4>
-
-				<p>If conditions are imposed on you (whether by court order, agreement or
-				otherwise) that contradict the conditions of this License, they do not
-				excuse you from the conditions of this License.  If you cannot convey a
-				covered work so as to satisfy simultaneously your obligations under this
-				License and any other pertinent obligations, then as a consequence you may
-				not convey it at all.  For example, if you agree to terms that obligate you
-				to collect a royalty for further conveying from those to whom you convey
-				the Program, the only way you could satisfy both those terms and this
-				License would be to refrain entirely from conveying the Program.</p>
-
-				<h4><a name="section13"></a>13. Remote Network Interaction; Use with the GNU General Public License.</h4>
-
-				<p>Notwithstanding any other provision of this License, if you modify the
-				Program, your modified version must prominently offer all users
-				interacting with it remotely through a computer network (if your version
-				supports such interaction) an opportunity to receive the Corresponding
-				Source of your version by providing access to the Corresponding Source
-				from a network server at no charge, through some standard or customary
-				means of facilitating copying of software.  This Corresponding Source
-				shall include the Corresponding Source for any work covered by version 3
-				of the GNU General Public License that is incorporated pursuant to the
-				following paragraph.</p>
-
-				<p>Notwithstanding any other provision of this License, you have permission
-				to link or combine any covered work with a work licensed under version 3
-				of the GNU General Public License into a single combined work, and to
-				convey the resulting work.  The terms of this License will continue to
-				apply to the part which is the covered work, but the work with which it is
-				combined will remain governed by version 3 of the GNU General Public
-				License.</p>
-
-				<h4><a name="section14"></a>14. Revised Versions of this License.</h4>
-
-				<p>The Free Software Foundation may publish revised and/or new versions of
-				the GNU Affero General Public License from time to time.  Such new
-				versions will be similar in spirit to the present version, but may differ
-				in detail to address new problems or concerns.</p>
-
-				<p>Each version is given a distinguishing version number.  If the
-				Program specifies that a certain numbered version of the GNU Affero
-				General Public License &quot;or any later version&quot; applies to it, you have
-				the option of following the terms and conditions either of that
-				numbered version or of any later version published by the Free
-				Software Foundation.  If the Program does not specify a version number
-				of the GNU Affero General Public License, you may choose any version
-				ever published by the Free Software Foundation.</p>
-
-				<p>If the Program specifies that a proxy can decide which future
-				versions of the GNU Affero General Public License can be used, that
-				proxy's public statement of acceptance of a version permanently
-				authorizes you to choose that version for the Program.</p>
-
-				<p>Later license versions may give you additional or different
-				permissions.  However, no additional obligations are imposed on any
-				author or copyright holder as a result of your choosing to follow a
-				later version.</p>
-
-				<h4><a name="section15"></a>15. Disclaimer of Warranty.</h4>
-
-				<p>THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
-				APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
-				HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM &quot;AS IS&quot; WITHOUT WARRANTY
-				OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,
-				THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-				PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
-				IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
-				ALL NECESSARY SERVICING, REPAIR OR CORRECTION.</p>
-
-				<h4><a name="section16"></a>16. Limitation of Liability.</h4>
-
-				<p>IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-				WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS
-				THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY
-				GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
-				USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF
-				DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD
-				PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
-				EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-				SUCH DAMAGES.</p>
-
-				<h4><a name="section17"></a>17. Interpretation of Sections 15 and 16.</h4>
-
-				<p>If the disclaimer of warranty and limitation of liability provided
-				above cannot be given local legal effect according to their terms,
-				reviewing courts shall apply local law that most closely approximates
-				an absolute waiver of all civil liability in connection with the
-				Program, unless a warranty or assumption of liability accompanies a
-				copy of the Program in return for a fee.</p>
-			</div>
-			<div class="modal-footer"></div>
-		</div>
-	</div>
-</div>
-<!--
-External Sources
--->
+<!-- Third party source files -->
 <script src="lib/jquery.min.js"></script>
-<script src="lib/tether.min.js"></script>
-<script src="lib/bootstrap.min.js"></script>
 <script src="lib/d3.v3.min.js"></script>
-<script src="lib/list.min.js"></script>
 <script src="lib/crossfilter.js"></script>
 <script src="lib/dc.js"></script>
 <script src="lib/colorbrewer.js"></script>
@@ -1326,16 +360,93 @@ External Sources
 <script src="lib/reductio.js"></script>
 <script src="lib/inobounce.min.js"></script>
 <script src="lib/fastclick.js"></script>
-<!-- 
-Muscle Book Sources 
--->
+<script src="semantic/dist/semantic.min.js"></script>
+<script src="lib/dexie.js"></script>
+
+<!-- Muscle book source files -->
+<script src="mb/mb.js"></script>
 <script src="mb/muscles.js"></script>
-<script src="mb/exercises.js"></script>
+<script src="mb/exercise.js"></script>
 <script src="mb/calendar.js"></script>
 <script src="mb/anatomy.js"></script>
-<script src="mb/mb.js"></script>
-<!--
-Done!
--->
+<script src="mb/datatable.js"></script>
+<script src="mb/util.js"></script>
+<script src="mb/data.js"></script>
+<script src="mb/metric.js"></script>
+<script src="mb/model.js"></script>
+<script src="mb/component.js"></script>
+
+<script>
+
+mb.data.loadFromLocalDB()
+	.then(data => mb.model.entries.add(data))
+	.then(() => mb.component.renderAll());
+
+mb.component.metricDropdown('.ui.metric.dropdown');
+mb.component.aggregationDropdown('.ui.aggregation.dropdown');
+mb.component.muscleDropdown('.muscle.dropdown', mb.model.metricByMuscle);
+mb.component.exerciseDropdown('.exercise.dropdown', mb.model.metricByExercise);
+mb.component.stats('.stats.grid', mb.model.statistics);
+mb.component.dataTable('.entry-data-table', mb.model.metricByDate);
+
+$('.ui.sidebar')
+  .sidebar({
+    closable: false,
+    dimPage: false, 
+	onHidden: (() => {
+		mb.component.renderAll();
+	}),
+	onShow: (() => {
+		mb.component.renderAll();
+	}),
+  })
+  .sidebar('attach events', '.toggle.sidebar');
+
+mb.component.calendarChart('.workout-calendar', mb.model.metricByDate)
+    .margins({top: 20, right: 10, bottom: 0, left: 20})
+	.tip('.status-text');
+
+mb.component.anatomyChart('.anatomy.left', mb.model.metricByMuscle)
+	.anterior()
+	.tip('.status-text');
+
+mb.component.anatomyChart('.anatomy.right', mb.model.metricByMuscle)
+	.posterior()
+	.tip('.status-text');
+
+const timelineChart = mb.component.timeChart('.time.chart.content', mb.model.metricByDate)
+	.renderHorizontalGridLines(true)
+	.transitionDuration(1000)
+	.margins({top: 10, right: 10, bottom: 20, left: 30})
+	.tip('.status-text');
+
+const repsChart = mb.component.repsChart('.reps.chart.content', mb.model.setsByReps)
+	.renderHorizontalGridLines(true)
+	.transitionDuration(1000)
+	.margins({top: 10, right: 10, bottom: 20, left: 45})
+	.tip('.status-text');
+
+const setsChart = mb.component.setsChart('.sets.chart.content', mb.model.workoutsBySets)
+	.renderHorizontalGridLines(true)
+	.transitionDuration(1000)
+	.margins({top: 10, right: 10, bottom: 20, left: 45})
+	.tip('.status-text');
+
+const weightChart = mb.component.weightChart('.weight.chart.content', mb.model.setsByWeight)
+	.renderHorizontalGridLines(true)
+	.transitionDuration(1000)
+	.margins({top: 10, right: 10, bottom: 20, left: 50})
+	.tip('.status-text');
+
+mb.component.renderAll();
+
+let prevWindowWidth = window.innerWidth;
+window.onresize = function(event) {
+    if (prevWindowWidth == window.innerWidth) return;
+    prevWindowWidth = window.innerWidth;
+    mb.component.renderAll();
+};
+
+</script>
 </body>
 </html>

@@ -111,18 +111,18 @@ dc.anatomyDiagram = function(parent, chartGroup) {
                 d3.select(this)
                     .classed("highlight", true);
                 d3.select(_tipSelector)
-                    .attr("hidden", null)
+                    .style("display", "initial")
                     .html(_chart.title()(d));
             })
             .on("mouseout", function (d) {
                 d3.select(this)
                     .classed("highlight", false);
                 d3.select(_tipSelector)
-                    .attr("hidden", "true")
+                    .style("display", "none")
                     .text(null);
             })
             .attr("fill", fill)
-            .exit().attr("fill", "#fefefe");
+            .exit().attr("fill", "#eee");
     }
 
     function generateSvg(completion) {
